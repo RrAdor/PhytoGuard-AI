@@ -60,7 +60,9 @@ function navigate(path) {
 
 function link(path, label, extra = '') {
   const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-  const isCurrent = currentPath === path || (path === '/crops' && (currentPath === '/crops' || currentPath.startsWith('/crops/')));
+  const isCurrent = currentPath === path || 
+    (path === '/crops' && (currentPath === '/crops' || currentPath.startsWith('/crops/'))) ||
+    ((path === '/about' || path === '/knowledge-base') && (currentPath === '/about' || currentPath === '/knowledge-base'));
   const classes = [extra, isCurrent ? 'active' : ''].filter(Boolean).join(' ');
   return `<a class="${classes}" href="${path}" data-route>${label}</a>`;
 }
@@ -77,7 +79,6 @@ function header() {
         ${link('/crops', 'Main Crops')}
         ${link('/how-it-works', 'How It Works')}
         ${link('/plans', 'Plans')}
-        <a class="nav-unlinked" href="#" onclick="event.preventDefault()">About</a>
         ${link('/knowledge-base', 'Knowledge Base')}
       </nav>
       <div class="header-actions">
@@ -1974,7 +1975,7 @@ function render() {
   else if (crop) page = cropDetailPage(crop);
   else if (path === '/how-it-works') page = howItWorksPage();
   else if (path === '/plans') page = plansPage();
-  else if (path === '/knowledge-base') page = knowledgeBasePage();
+  else if (path === '/knowledge-base' || path === '/about') page = knowledgeBasePage();
   else if (path === '/dashboard') page = dashboardPage();
   else if (path === '/login') page = loginPage();
   else if (path === '/signup') page = signupPage();
@@ -1992,7 +1993,7 @@ function render() {
     app.innerHTML = `${header()}<main>${page}</main>${footer()}`;
   }
 
-  if (path === '/knowledge-base') {
+  if (path === '/knowledge-base' || path === '/about') {
     setupKnowledgeBaseEvents();
   }
 
@@ -2004,7 +2005,7 @@ function render() {
   else if (path === '/crops') document.title = 'PhytoGuard AI - Main Crops';
   else if (path === '/how-it-works') document.title = 'PhytoGuard AI - How It Works';
   else if (path === '/plans') document.title = 'PhytoGuard AI - Plans & Pricing';
-  else if (path === '/knowledge-base') document.title = 'PhytoGuard AI - Knowledge Base & Help Center';
+  else if (path === '/knowledge-base' || path === '/about') document.title = 'PhytoGuard AI - Knowledge Base & Help Center';
   else if (crop) document.title = `PhytoGuard AI - ${crop.name} Monitoring`;
   else document.title = 'PhytoGuard AI - AI crop monitoring';
 }
