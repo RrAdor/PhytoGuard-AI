@@ -1,0 +1,23 @@
+{
+  "name": "pytho-gurd-ai",
+  "version": "1.0.0",
+  "description": "PhytoGuard AI crop monitoring website",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "qa": "node scripts/qa-local.mjs"
+  },
+  "keywords": ["agriculture", "crop-monitoring", "vite"],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.62.1",
+    "pngjs": "^7.0.0",
+    "vite": "^8.2.2"
+  }
+}
