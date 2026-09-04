@@ -3,3 +3,7 @@ dist/
 qa/
 .vite/
 .DS_Store
+.env
+.env.local
+.agents/
+skills-lock.json

@@ -1,0 +1,559 @@
+// src/i18n.js - Comprehensive Bilingual Internationalization (English & Bangla)
+
+const STORAGE_KEY = 'phytoguard_lang';
+
+export const translations = {
+  en: {
+    // Navigation & Header
+    'nav.dashboard': 'Dashboard',
+    'nav.crops': 'Main Crops',
+    'nav.howItWorks': 'How It Works',
+    'nav.plans': 'Plans',
+    'nav.knowledgeBase': 'Knowledge Base',
+    'nav.login': 'Login',
+    'nav.logout': 'Log Out',
+    'nav.allCrops': 'All crops',
+    'nav.adminTitle': 'Admin: System Administrator',
+    'nav.adminBadge': 'SYSTEM ADMINISTRATOR • DEMO REQUESTS & DRONE DISPATCH',
+    'nav.langLabel': 'EN',
+    'nav.langSwitchTooltip': 'Switch to বাংলা',
+
+    // Footer
+    'footer.tagline': 'Detection Done Right',
+    'footer.privacy': 'Privacy Policy',
+    'footer.terms': 'Terms of Service',
+    'footer.copyright': '© 2026 PhytoGuard AI Inc. All rights reserved.',
+    'footer.adminSession': 'System Administrator Session Active',
+
+    // Landing Hero
+    'hero.announcement': 'Free autonomous drone scouting trial',
+    'hero.title': 'Leaf Level<br />Crop Protection',
+    'hero.subtitle': 'An AI platform for crop protection, delivering field level visibility down to the leaf with autonomous commercial drone photogrammetry.',
+    'hero.cta': 'Start free demo',
+
+    // Why PhytoGuard Section
+    'why.heading': 'Leaf-level disease detection. Field-level clarity.',
+    'why.subheading': 'PhytoGuard AI turns routine drone flights into targeted crop protection decisions before pathogens spread across your acreage.',
+    'why.features.f1.title': 'Autonomous Flight Paths',
+    'why.features.f1.desc': 'Deploy automated RTK-guided drone sweeps with centimetre accuracy. Zero pilot training required.',
+    'why.features.f2.title': 'Multi-Band Sensors',
+    'why.features.f2.desc': 'Capture RGB, RedEdge, and Near-Infrared spectra to uncover physiological crop stress before visible yellowing.',
+    'why.features.f3.title': 'Actionable Agronomy',
+    'why.features.f3.desc': 'Receive leaf-level pathology alerts, pinpoint GPS prescription maps, and sprayer drone export files.',
+    'why.perks.detection': 'Leaf-level AI detection',
+    'why.perks.coverage': 'High-resolution drone coverage',
+    'why.perks.setup': 'Setup in minutes',
+
+    // Steps Section
+    'steps.heading': 'From field to decision in three steps',
+    'steps.subheading': 'Routine aerial monitoring tailored for modern agronomists and commercial growers.',
+    'steps.s1.num': '01',
+    'steps.s1.title': 'Autonomous RTK Sweep',
+    'steps.s1.desc': 'Commercial drones fly pre-planned waypoints capturing sub-centimetre photogrammetry of your target crop sectors.',
+    'steps.s2.num': '02',
+    'steps.s2.title': 'Neural Pathology Diagnosis',
+    'steps.s2.desc': 'Deep-learning vision models scan millions of leaf pixels to classify fungal, bacterial, and viral pathogens at early onset.',
+    'steps.s3.num': '03',
+    'steps.s3.title': 'Targeted Spray Prescriptions',
+    'steps.s3.desc': 'Generate variable-rate application maps compatible with Agras spray drones and John Deere sprayers, reducing chemical usage up to 38%.',
+
+    // Landing Demo / Calculator Section
+    'demoSec.badge': 'INTERACTIVE FIELD AUDIT',
+    'demoSec.heading': 'Estimate Your Crop Protection ROI',
+    'demoSec.subheading': 'Configure your acreage and crop type to project autonomous drone scouting efficiency and chemical reduction.',
+    'demoSec.farmAcreage': 'Farm Acreage (Hectares)',
+    'demoSec.cropSector': 'Primary Target Crop',
+    'demoSec.droneModel': 'Assigned Drone Hardware',
+    'demoSec.projectedCoverage': 'Projected Flight Time',
+    'demoSec.chemicalSavings': 'Projected Chemical Savings',
+    'demoSec.earlyDetection': 'Early Detection Window',
+    'demoSec.cta': 'Schedule Live Demonstration',
+
+    // Main Crops Page
+    'crops.badge': 'COMMERCIAL CROP COVERAGE',
+    'crops.heading': 'Target Crops & Plant Pathologies',
+    'crops.subheading': 'High-resolution deep learning diagnostics calibrated for high-value row crops, vegetables, and orchards.',
+    'crops.filter.all': 'All Crops',
+    'crops.filter.row': 'Row Crops',
+    'crops.filter.vegetables': 'Vegetables',
+    'crops.filter.orchards': 'Orchards',
+    'crops.filter.cash': 'Cash Crops',
+    'crops.accuracy': 'Detection Accuracy',
+    'crops.viewDetails': 'View Pathology Profile',
+    'crops.modal.symptoms': 'Key Symptoms & Biomarkers',
+    'crops.modal.treatment': 'Targeted Agronomic Protocol',
+    'crops.modal.droneSpec': 'Optimal Sensor Band',
+    'crops.modal.close': 'Close Profile',
+
+    // Crop Names
+    'crop.wheat': 'Wheat',
+    'crop.tomato': 'Tomatoes',
+    'crop.soybeans': 'Soybeans',
+    'crop.cucumber': 'Cucumbers',
+    'crop.potato': 'Potatoes',
+    'crop.grapevine': 'Grapevines',
+    'crop.corn': 'Corn (Maize)',
+    'crop.cotton': 'Cotton',
+    'crop.sugarcane': 'Sugarcane',
+    'crop.sugar-beet': 'Sugar Beet',
+    'crop.onion': 'Onions',
+
+    // How It Works Page
+    'hiw.badge': 'AUTONOMOUS TECHNOLOGY STACK',
+    'hiw.heading': 'How PhytoGuard AI Protects Fields',
+    'hiw.subheading': 'An end-to-end aerial intelligence pipeline bridging commercial drones, multispectral sensors, and leaf-level deep learning.',
+    'hiw.step1.title': 'Mission Dispatch & RTK Flight',
+    'hiw.step1.desc': 'Pre-programmed flight paths execute autonomously with sub-2cm positioning accuracy.',
+    'hiw.step2.title': 'Multispectral & RGB Ingestion',
+    'hiw.step2.desc': 'Calibrated radiometers measure NIR, RedEdge, and RGB wavelengths to compute precision vegetation indices.',
+    'hiw.step3.title': 'Leaf-Level Neural Segmentation',
+    'hiw.step3.desc': 'Vision transformers detect chlorosis, fungal lesions, and insect damage down to individual leaf margins.',
+    'hiw.step4.title': 'Actionable Prescription Maps',
+    'hiw.step4.desc': 'Export variable-rate spray prescriptions directly to spray drones and tractor controllers.',
+    'hiw.banner.heading': 'Ready to safeguard your harvest?',
+    'hiw.banner.sub': 'Experience autonomous drone scouting on your own farm plot with zero obligation.',
+    'hiw.banner.btn': 'Start Free Demo',
+
+    // Plans Page
+    'plans.badge': 'COMMERCIAL SUBSCRIPTIONS',
+    'plans.heading': 'Flexible Drone AI Plans',
+    'plans.subheading': 'Transparent monthly and annual packages engineered for independent growers, agronomists, and commercial farm fleets.',
+    'plans.grower.title': 'Grower Plan',
+    'plans.grower.tag': 'POPULAR FOR GROWERS',
+    'plans.grower.desc': 'Essential autonomous scouting for single-farm operations and high-value acreage.',
+    'plans.grower.price': '৳4,999 / month',
+    'plans.agro.title': 'Agronomist Pro',
+    'plans.agro.tag': 'FOR CONSULTANTS',
+    'plans.agro.desc': 'Multi-field management, variable-rate prescription maps, and drone fleet integration.',
+    'plans.agro.price': '৳12,500 / month',
+    'plans.fleet.title': 'Enterprise Fleet',
+    'plans.fleet.tag': 'CORPORATE & FLEET',
+    'plans.fleet.desc': 'Full enterprise telemetry, custom neural model retraining, and dedicated agronomist API support.',
+    'plans.fleet.price': 'Custom Enterprise Quote',
+    'plans.cta': 'Get Started With',
+
+    // Knowledge Base Page
+    'kb.badge': 'SUPPORT & AGRONOMY KNOWLEDGE',
+    'kb.heading': 'PhytoGuard AI Knowledge Base',
+    'kb.subheading': 'Technical guides, pathogen identification keys, and flight operations documentation.',
+    'kb.searchPlaceholder': 'Search articles, diseases, or drone guides...',
+    'kb.categories.all': 'All Topics',
+    'kb.categories.drone': 'Drone Flight Ops',
+    'kb.categories.pathology': 'Crop Pathologies',
+    'kb.categories.sensors': 'Sensors & Cameras',
+    'kb.categories.prescriptions': 'Spray Prescriptions',
+    'kb.readArticle': 'Read Guide',
+    'kb.closeModal': 'Close Article',
+
+    // User / Grower Dashboard
+    'dash.session': 'Drone RTK Gateway Active',
+    'dash.welcome': 'Welcome back,',
+    'dash.subtitle': 'Autonomous Drone Crop Protection & Leaf-Level Pathology Monitor',
+    'dash.exportReport': 'Export Report',
+    'dash.planMission': '৳ + Plan Drone Mission',
+    'dash.kpi.acreage': 'Monitored Acreage',
+    'dash.kpi.acreageUnit': 'Hectares',
+    'dash.kpi.acreageSub': 'Across 6 Crop Sectors',
+    'dash.kpi.missions': 'Drone Missions',
+    'dash.kpi.missionsUnit': 'Flights',
+    'dash.kpi.missionsSub': '1 Mission Scheduled Today',
+    'dash.kpi.pathologies': 'Active Pathologies',
+    'dash.kpi.pathologiesUnit': 'Alerts',
+    'dash.kpi.pathologiesSub': 'Early Blight & Yellow Rust',
+    'dash.kpi.health': 'Canopy Health (NDVI)',
+    'dash.kpi.healthUnit': 'Index',
+    'dash.kpi.healthSub': '+3.8% Optimal vigor',
+    'dash.heatmap.telemetry': 'LIVE PHOTOGRAMMETRY TELEMETRY • MISSION DJI-RTK-0498',
+    'dash.heatmap.heading': 'Drone Scan Coverage & Leaf Pathology Heatmap',
+    'dash.heatmap.subheading': '16:9 Widescreen view of autonomous drone scan progress across 450 hectares',
+    'dash.heatmap.scannedPill': '382.5 / 450 Ha (85.0% Scanned)',
+    'dash.heatmap.layerCoverage': 'Scan Coverage',
+    'dash.heatmap.layerNdvi': 'NDVI Vigor',
+    'dash.heatmap.layerGrid': 'Flight Grid',
+    'dash.sectors.heading': 'Monitored Crop Sectors',
+    'dash.sectors.subheading': 'Real-time leaf pathology & drone status for registered crops',
+    'dash.sectors.viewAll': 'All Crops →',
+    'dash.fleet.heading': 'Drone Fleet Status',
+    'dash.fleet.online': '2 Drones Online',
+    'dash.fleet.battery': 'Battery',
+    'dash.fleet.altitude': 'Flight Altitude',
+    'dash.fleet.status': 'Status',
+    'dash.scanCompleteTag': 'AI DRONE SCANNING COMPLETED',
+    'dash.scanSectorReady': 'Scan Results & Leaf Pathology Diagnosis Ready',
+    'dash.inspectRxBtn': 'Inspect Rx & Diagnostics',
+    'dash.scanNoticeModalTitle': 'DRONE SPECTRAL ANALYSIS • GROWER REPORT',
+    'dash.scanningActiveTag': 'AUTONOMOUS DRONE SCAN IN PROGRESS',
+    'dash.scanningInProgress': 'Aerial Grid Flight & Multispectral Sensor Active',
+    'dash.completeScanBtn': 'Complete Scan & Process Results',
+    'dash.newScanBtn': 'New Scan',
+    'dash.requestScanBtn': 'Request Drone Scan',
+
+    // Admin Dashboard
+    'admin.badge': 'SYSTEM ADMINISTRATOR • DEMO REQUESTS & DRONE DISPATCH',
+    'admin.heading': 'Users Demo Requests &',
+    'admin.headingAccent': 'Drone Photogrammetry',
+    'admin.subheading': 'Inbound Farm Applications & Commercial Drone Mission Ingestion',
+    'admin.kpi.total': 'Users Demo Requests',
+    'admin.kpi.totalSub': 'Total Inbound Farm Applications',
+    'admin.kpi.pending': 'Pending Approval',
+    'admin.kpi.pendingSub': 'Awaiting Admin Review',
+    'admin.kpi.approved': 'Approved Requests',
+    'admin.kpi.approvedSub': 'Ready for Drone Flight Ingestion',
+    'admin.kpi.uploaded': 'Hyperspectral Uploaded',
+    'admin.kpi.uploadedSub': 'Completed Drone Datasets',
+    'admin.tab.all': 'All Requests',
+    'admin.tab.pending': 'Pending Review',
+    'admin.tab.approved': 'Approved',
+    'admin.tab.uploaded': 'Imagery Uploaded',
+    'admin.searchPlaceholder': 'Search by farm name, email, district, or crop...',
+    'admin.th.id': 'Request ID & Date',
+    'admin.th.user': 'User / Farm Enterprise',
+    'admin.th.district': 'District & Acreage',
+    'admin.th.crop': 'Target Crop',
+    'admin.th.status': 'Status',
+    'admin.th.spectral': 'Hyperspectral Dataset',
+    'admin.th.actions': 'Actions',
+    'admin.status.pending': 'Pending Review',
+    'admin.status.approved': 'Approved',
+    'admin.status.uploaded': 'Imagery Uploaded',
+    'admin.spectral.awaiting': 'Awaiting Approval',
+    'admin.spectral.ready': 'Ready for Drone Upload',
+    'admin.spectral.readyCount': '✓ 1 Dataset Ready',
+    'admin.btn.approve': 'Approve Request',
+    'admin.btn.upload': '+ Upload Drone Image',
+    'admin.btn.inspect': 'Inspect Rx',
+    'admin.btn.reupload': 'Re-upload',
+
+    // Auth (Login & Signup)
+    'auth.growerTab': '🌱 Grower / Farm Login',
+    'auth.adminTab': '🛡️ Admin Portal',
+    'auth.welcome': 'Welcome',
+    'auth.welcomeSub': 'Please log in to your account',
+    'auth.adminGateway': 'Admin Gateway',
+    'auth.adminGatewaySub': 'Administrator Gateway & User Dashboard Access',
+    'auth.usernameLabel': 'Username or Email Address',
+    'auth.passwordLabel': 'Password',
+    'auth.rememberMe': 'Remember me',
+    'auth.signIn': 'Sign In',
+    'auth.signInAdmin': 'Sign In to Dashboard as Admin →',
+    'auth.signUp': 'Sign Up',
+    'auth.createAccount': 'Create Account',
+    'auth.createAccountSub': 'Join 1,200+ commercial growers protecting fields with PhytoGuard AI',
+    'auth.forgotPassword': 'Forgot password?',
+    'auth.haveAccount': 'Already have an account?',
+    'auth.noAccount': "Don't have an account?",
+    'auth.roleHintGrower': 'Grower:',
+    'auth.roleHintAdmin': 'Admin:',
+
+    // Common
+    'common.close': 'Close',
+    'common.cancel': 'Cancel',
+    'common.submit': 'Submit',
+    'common.save': 'Save Changes',
+    'common.hectares': 'Hectares',
+    'common.flights': 'Flights'
+  },
+
+  bn: {
+    // Navigation & Header
+    'nav.dashboard': 'ড্যাশবোর্ড',
+    'nav.crops': 'প্রধান ফসল',
+    'nav.howItWorks': 'যেভাবে কাজ করে',
+    'nav.plans': 'প্যাকেজ ও মূল্য',
+    'nav.knowledgeBase': 'নলেজ বেস',
+    'nav.login': 'লগইন',
+    'nav.logout': 'লগআউট',
+    'nav.allCrops': 'সব ফসল',
+    'nav.adminTitle': 'অ্যাডমিন: সিস্টেম অ্যাডমিনিস্ট্রেটর',
+    'nav.adminBadge': 'সিস্টেম অ্যাডমিনিস্ট্রেটর • ডেমো অনুরোধ ও ড্রোন প্রেরণ',
+    'nav.langLabel': 'বাংলা',
+    'nav.langSwitchTooltip': 'Switch to English',
+
+    // Footer
+    'footer.tagline': 'নির্ভুল শনাক্তকরণ, নিশ্চিত ফলন',
+    'footer.privacy': 'গোপনীয়তা নীতি',
+    'footer.terms': 'ব্যবহারের শর্তাবলী',
+    'footer.copyright': '© ২০২৬ PhytoGuard AI Inc. সর্বস্বত্ব সংরক্ষিত।',
+    'footer.adminSession': 'সিস্টেম অ্যাডমিনিস্ট্রেটর সেশন সক্রিয়',
+
+    // Landing Hero
+    'hero.announcement': 'ফ্রি অটোনোমাস ড্রোন স্কাউটিং ট্রায়াল',
+    'hero.title': 'পাতার স্তরে<br />ফসল সুরক্ষা',
+    'hero.subtitle': 'ফসল সুরক্ষায় এআই প্ল্যাটফর্ম, যা অটোনোমাস বাণিজ্যিক ড্রোন ফটোগ্রামেট্রির মাধ্যমে সরাসরি পাতার স্তর পর্যন্ত নির্ভুল নজরদারি নিশ্চিত করে।',
+    'hero.cta': 'ফ্রি ডেমো শুরু করুন',
+
+    // Why PhytoGuard Section
+    'why.heading': 'পাতার স্তরে রোগ শনাক্তকরণ। মাঠজুড়ে পূর্ণ স্পষ্টতা।',
+    'why.subheading': 'ফাইটোগার্ড এআই আপনার নিয়মিত ড্রোন ফ্লাইটকে রূপান্তর করে সময়োপযোগী সিদ্ধান্ত গ্রহণে, জমিতে রোগজীবাণু ছড়ানোর আগেই।',
+    'why.features.f1.title': 'স্বয়ংক্রিয় ফ্লাইট পাথ',
+    'why.features.f1.desc': 'সেন্টিমিটার স্তরের নির্ভুলতায় আরটিকে-নিয়ন্ত্রিত ড্রোন ফ্লাইট পরিচালনা করুন। কোনো পাইলট প্রশিক্ষণের প্রয়োজন নেই।',
+    'why.features.f2.title': 'মাল্টি-ব্যান্ড সেন্সর',
+    'why.features.f2.desc': 'আরজিবি, রেড-এজ এবং নিয়ার-ইনফ্রারেড বর্ণালী ধারণ করে পাতায় খালি চোখে হলুদ দাগ আসার আগেই উদ্ভিদের দুর্বলতা শনাক্ত করুন।',
+    'why.features.f3.title': 'কার্যকর কৃষি পরামর্শ',
+    'why.features.f3.desc': 'পাতার স্তরভিত্তিক রোগ সতর্কতা, জিপিএস নির্ভুল প্রেসক্রিপশন ম্যাপ এবং স্প্রেয়ার ড্রোন উপযোগী ফাইল গ্রহণ করুন।',
+    'why.perks.detection': 'পাতার স্তরে এআই শনাক্তকরণ',
+    'why.perks.coverage': 'উচ্চ রেজোলিউশন ড্রোন কভারেজ',
+    'why.perks.setup': 'মাত্র কয়েক মিনিটে সেটআপ',
+
+    // Steps Section
+    'steps.heading': 'মাঠ থেকে সিদ্ধান্ত — মাত্র তিন ধাপে',
+    'steps.subheading': 'আধুনিক কৃষিবিদ ও বাণিজ্যিক চাষীদের উপযোগী নিয়মিত আকাশপথে মাঠ নজরদারি।',
+    'steps.s1.num': '০১',
+    'steps.s1.title': 'স্বয়ংক্রিয় আরটিকে ফ্লাইট',
+    'steps.s1.desc': 'বাণিজ্যিক ড্রোনগুলো পূর্বনির্ধারিত জিপিএস পয়েন্টে উড়ে আপনার নির্ধারিত ফসলের সাব-সেন্টিমিটার ফটোগ্রামেট্রি ধারণ করে।',
+    'steps.s2.num': '০২',
+    'steps.s2.title': 'নিউরাল প্যাথোলজি বিশ্লেষণ',
+    'steps.s2.desc': 'ডিপ-লার্নিং ভিশন মডেল লাখ লাখ পাতার পিক্সেল বিশ্লেষণ করে ছত্রাক, ব্যাকটেরিয়া ও ভাইরাসজনিত রোগ প্রাথমিক অবস্থাতেই শনাক্ত করে।',
+    'steps.s3.num': '০৩',
+    'steps.s3.title': 'সুনির্দিষ্ট স্প্রে প্রেসক্রিপশন',
+    'steps.s3.desc': 'অ্যাগ্রাস ড্রোন ও আধুনিক স্প্রেয়ার উপযোগী প্রেসক্রিপশন তৈরি করুন, যা রাসায়নিকের ব্যবহার ৩৮% পর্যন্ত সাশ্রয় করে।',
+
+    // Landing Demo / Calculator Section
+    'demoSec.badge': 'ইন্টারেক্টিভ জমি পরিদর্শন অডিট',
+    'demoSec.heading': 'আপনার ফসল সুরক্ষার লাভ হিসাব করুন',
+    'demoSec.subheading': 'আপনার জমির পরিমাণ ও ফসলের ধরণ নির্বাচন করে স্বয়ংক্রিয় ড্রোন স্কাউটিংয়ের কার্যকারিতা ও খরচ সাশ্রয় দেখুন।',
+    'demoSec.farmAcreage': 'জমির পরিমাণ (হেক্টর)',
+    'demoSec.cropSector': 'প্রধান লক্ষ্য ফসল',
+    'demoSec.droneModel': 'ব্যবহারযোগ্য ড্রোন হার্ডওয়্যার',
+    'demoSec.projectedCoverage': 'প্রয়োজনীয় ফ্লাইট সময়',
+    'demoSec.chemicalSavings': 'প্রত্যাশিত বালাইনাশক সাশ্রয়',
+    'demoSec.earlyDetection': 'রোগ আগাম শনাক্তকরণ সময়',
+    'demoSec.cta': 'লাইভ ডেমো ফ্লাইটের অনুরোধ পাঠান',
+
+    // Main Crops Page
+    'crops.badge': 'বাণিজ্যিক ফসল কভারেজ',
+    'crops.heading': 'লক্ষ্য ফসল ও উদ্ভিদের রোগবালাই',
+    'crops.subheading': 'উচ্চমূল্যের মাঠ ফসল, শাকসবজি ও ফলবাগানের জন্য বিশেষভাবে প্রশিক্ষিত গভীর এআই ডায়াগনস্টিকস।',
+    'crops.filter.all': 'সব ফসল',
+    'crops.filter.row': 'মাঠ ফসল',
+    'crops.filter.vegetables': 'শাকসবজি',
+    'crops.filter.orchards': 'ফলবাগান',
+    'crops.filter.cash': 'অর্থকরী ফসল',
+    'crops.accuracy': 'শনাক্তকরণের নির্ভুলতা',
+    'crops.viewDetails': 'রোগের বিবরণ দেখুন',
+    'crops.modal.symptoms': 'প্রধান লক্ষণ ও বায়োমার্কার',
+    'crops.modal.treatment': 'সুনির্দিষ্ট কৃষি ব্যবস্থা',
+    'crops.modal.droneSpec': 'অনুকূল সেন্সর ব্যান্ড',
+    'crops.modal.close': 'প্রোফাইল বন্ধ করুন',
+
+    // Crop Names
+    'crop.wheat': 'গম',
+    'crop.tomato': 'টমেটো',
+    'crop.soybeans': 'সয়াবিন',
+    'crop.cucumber': 'শসা',
+    'crop.potato': 'আলু',
+    'crop.grapevine': 'আঙুর',
+    'crop.corn': 'ভুট্টা',
+    'crop.cotton': 'তুলা',
+    'crop.sugarcane': 'আখ',
+    'crop.sugar-beet': 'সুগার বিট',
+    'crop.onion': 'পেঁয়াজ',
+
+    // How It Works Page
+    'hiw.badge': 'স্বয়ংক্রিয় প্রযুক্তি কাঠামো',
+    'hiw.heading': 'যেভাবে ফাইটোগার্ড এআই মাঠ সুরক্ষা দেয়',
+    'hiw.subheading': 'বাণিজ্যিক ড্রোন, মাল্টিস্পেকট্রাল সেন্সর এবং পাতার স্তরে ডিপ লার্নিংয়ের সমন্বয়ে তৈরি এক অনন্য আকাশ নজরদারি সমাধান।',
+    'hiw.step1.title': 'মিশন পরিচালনা ও আরটিকে ফ্লাইট',
+    'hiw.step1.desc': 'সাব-২ সেমি পজিশনিং নির্ভুলতায় পূর্বনির্ধারিত ফ্লাইট রুটে ড্রোন স্বয়ংক্রিয়ভাবে আকাশপথে টহল দেয়।',
+    'hiw.step2.title': 'মাল্টিস্পেকট্রাল ও আরজিবি ডেটা সংগ্রহ',
+    'hiw.step2.desc': 'ক্যালিব্রেটেড রেডিওমিটার এনআইআর, রেড-এজ ও আরজিবি তরঙ্গদৈর্ঘ্য পরিমাপ করে উদ্ভিদের সতেজতা সূচক নির্ণয় করে।',
+    'hiw.step3.title': 'পাতার স্তরে নিউরাল সেগমেন্টেশন',
+    'hiw.step3.desc': 'আধুনিক কম্পিউটার ভিশন পাতার ক্ষুদ্রাতিক্ষুদ্র অংশে ক্লোরোসিস, ছত্রাকের ক্ষত এবং পোকামাকড়ের আক্রমণ নিখুঁতভাবে চিহ্নিত করে।',
+    'hiw.step4.title': 'সুনির্দিষ্ট প্রেসক্রিপশন ম্যাপ',
+    'hiw.step4.desc': 'স্প্রেয়ার ড্রোন ও ট্রাক্টরের কন্ট্রোলারে সরাসরি পরিবর্তনশীল প্রয়োগ মানচিত্র এক্সপোর্ট করুন।',
+    'hiw.banner.heading': 'আপনার ফসল সুরক্ষিত করতে প্রস্তুত?',
+    'hiw.banner.sub': 'কোনো বাধ্যবাধকতা ছাড়াই আপনার খামারে স্বয়ংক্রিয় ড্রোন স্কাউটিংয়ের অভিজ্ঞতা নিন।',
+    'hiw.banner.btn': 'ফ্রি ডেমো শুরু করুন',
+
+    // Plans Page
+    'plans.badge': 'বাণিজ্যিক সাবস্ক্রিপশন',
+    'plans.heading': 'সহজ ও সাশ্রয়ী ড্রোন এআই প্যাকেজ',
+    'plans.subheading': 'স্বতন্ত্র কৃষক, পেশাদার কৃষিবিদ এবং বাণিজ্যিক খামার বহরের উপযোগী স্বচ্ছ মাসিক ও বার্ষিক প্যাকেজ।',
+    'plans.grower.title': 'গ্রোয়ার প্ল্যান',
+    'plans.grower.tag': 'কৃষকদের জন্য জনপ্রিয়',
+    'plans.grower.desc': 'একক খামার পরিচালনাকারী এবং উচ্চমূল্যের ফসলের জন্য প্রয়োজনীয় স্বয়ংক্রিয় স্কাউটিং।',
+    'plans.grower.price': '৳৪,৯৯৯ / মাস',
+    'plans.agro.title': 'অ্যাগ্রোনমিস্ট প্রো',
+    'plans.agro.tag': 'পরামর্শকদের জন্য',
+    'plans.agro.desc': 'একাধিক মাঠ ব্যবস্থাপনা, পরিবর্তনশীল স্প্রে প্রেসক্রিপশন ম্যাপ এবং ড্রোন বহর সমন্বয়।',
+    'plans.agro.price': '৳১২,৫০০ / মাস',
+    'plans.fleet.title': 'এন্টারপ্রাইজ ফ্লিট',
+    'plans.fleet.tag': 'কর্পোরেট ও ড্রোন বহর',
+    'plans.fleet.desc': 'পূর্ণাঙ্গ টেলিমেট্রি, কাস্টম এআই মডেল ট্রেনিং এবং ডেডিকেটেড অ্যাগ্রোনমিস্ট এপিআই সহায়তা।',
+    'plans.fleet.price': 'কাস্টম এন্টারপ্রাইজ মূল্য',
+    'plans.cta': 'শুরু করুন —',
+
+    // Knowledge Base Page
+    'kb.badge': 'সহায়তা ও কৃষি তথ্যভান্ডার',
+    'kb.heading': 'ফাইটোগার্ড এআই নলেজ বেস',
+    'kb.subheading': 'কারিগরি নির্দেশিকা, রোগবালাই শনাক্তকরণ ম্যানুয়াল এবং ড্রোন ফ্লাইট পরিচালন সহায়িকা।',
+    'kb.searchPlaceholder': 'নিবন্ধ, রোগবালাই বা ড্রোন গাইড অনুসন্ধান করুন...',
+    'kb.categories.all': 'সব বিষয়',
+    'kb.categories.drone': 'ড্রোন ফ্লাইট অপারেশন',
+    'kb.categories.pathology': 'ফসলের রোগবালাই',
+    'kb.categories.sensors': 'সেন্সর ও ক্যামেরা',
+    'kb.categories.prescriptions': 'স্প্রে প্রেসক্রিপশন',
+    'kb.readArticle': 'গাইডটি পড়ুন',
+    'kb.closeModal': 'নিবন্ধ বন্ধ করুন',
+
+    // User / Grower Dashboard
+    'dash.session': 'ড্রোন আরটিকে গেটওয়ে সক্রিয়',
+    'dash.welcome': 'স্বাগতম,',
+    'dash.subtitle': 'স্বয়ংক্রিয় ড্রোন ফসল সুরক্ষা ও পাতার রোগবালাই মনিটর',
+    'dash.exportReport': 'রিপোর্ট এক্সপোর্ট করুন',
+    'dash.planMission': '৳ + ড্রোন মিশন প্ল্যান করুন',
+    'dash.kpi.acreage': 'নজরদারিকৃত জমি',
+    'dash.kpi.acreageUnit': 'হেক্টর',
+    'dash.kpi.acreageSub': '৬টি ফসল এলাকা জুড়ে',
+    'dash.kpi.missions': 'ড্রোন মিশন',
+    'dash.kpi.missionsUnit': 'ফ্লাইট',
+    'dash.kpi.missionsSub': 'আজ ১টি মিশন নির্ধারিত',
+    'dash.kpi.pathologies': 'সক্রিয় রোগবালাই',
+    'dash.kpi.pathologiesUnit': 'সতর্কতা',
+    'dash.kpi.pathologiesSub': 'আর্লি ব্লাইট ও ইয়েলো রাস্ট',
+    'dash.kpi.health': 'গাছের পাতার স্বাস্থ্য (NDVI)',
+    'dash.kpi.healthUnit': 'সূচক',
+    'dash.kpi.healthSub': '+৩.৮% চমৎকার সতেজতা',
+    'dash.heatmap.telemetry': 'লাইভ ফটোগ্রামেট্রি টেলিমেট্রি • মিশন DJI-RTK-0498',
+    'dash.heatmap.heading': 'ড্রোন স্ক্যান কভারেজ ও পাতার রোগবালাই হিটম্যাপ',
+    'dash.heatmap.subheading': '৪৫০ হেক্টর জমির উপর স্বয়ংক্রিয় ড্রোন স্ক্যান অগ্রগতির ১৬:৯ ওয়াইডস্ক্রিন দৃশ্য',
+    'dash.heatmap.scannedPill': '৩৮২.৫ / ৪৫০ হেক্টর (৮৫.০% স্ক্যান সম্পন্ন)',
+    'dash.heatmap.layerCoverage': 'স্ক্যান কভারেজ',
+    'dash.heatmap.layerNdvi': 'এনডিভিআই সতেজতা',
+    'dash.heatmap.layerGrid': 'ফ্লাইট গ্রিড',
+    'dash.sectors.heading': 'নজরদারিকৃত ফসল এলাকা',
+    'dash.sectors.subheading': 'নিবন্ধিত ফসলের রিয়েল-টাইম প্যাথলজি ও ড্রোন নজরদারি অবস্থা',
+    'dash.sectors.viewAll': 'সব ফসল →',
+    'dash.fleet.heading': 'ড্রোন বহরের অবস্থা',
+    'dash.fleet.online': '২টি ড্রোন সচল',
+    'dash.fleet.battery': 'ব্যাটারি',
+    'dash.fleet.altitude': 'উড্ডয়ন উচ্চতা',
+    'dash.fleet.status': 'অবস্থা',
+    'dash.scanCompleteTag': 'এআই ড্রোন স্ক্যানিং সম্পন্ন',
+    'dash.scanSectorReady': 'স্ক্যান ফলাফল ও পাতার রোগবালাই বিশ্লেষণ প্রস্তুত',
+    'dash.inspectRxBtn': 'প্রেসক্রিপশন ও ফলাফল দেখুন',
+    'dash.scanNoticeModalTitle': 'ড্রোন বর্ণালী বিশ্লেষণ • খামারি রিপোর্ট',
+    'dash.scanningActiveTag': 'স্বয়ংক্রিয় ড্রোন স্ক্যান চলছে',
+    'dash.scanningInProgress': 'আকাশপথে গ্রিড ফ্লাইট ও মাল্টিস্পেকট্রাল সেন্সর সক্রিয়',
+    'dash.completeScanBtn': 'স্ক্যান সম্পন্ন ও ফলাফল বিশ্লেষণ করুন',
+    'dash.newScanBtn': 'নতুন স্ক্যান',
+    'dash.requestScanBtn': 'ড্রোন স্ক্যান অনুরোধ',
+
+    // Admin Dashboard
+    'admin.badge': 'সিস্টেম অ্যাডমিনিস্ট্রেটর • ডেমো অনুরোধ ও ড্রোন প্রেরণ',
+    'admin.heading': 'ব্যবহারকারীদের ডেমো অনুরোধ ও',
+    'admin.headingAccent': 'ড্রোন ফটোগ্রামেট্রি',
+    'admin.subheading': 'ইনবাউন্ড খামার আবেদন এবং বাণিজ্যিক ড্রোন মিশন ডেটাসেট ব্যবস্থাপনা',
+    'admin.kpi.total': 'মোট ডেমো অনুরোধ',
+    'admin.kpi.totalSub': 'প্রাপ্ত মোট খামার আবেদন',
+    'admin.kpi.pending': 'পর্যালোচনার অপেক্ষায়',
+    'admin.kpi.pendingSub': 'অ্যাডমিন অনুমোদনের অপেক্ষায়',
+    'admin.kpi.approved': 'অনুমোদিত অনুরোধ',
+    'admin.kpi.approvedSub': 'ড্রোন ফ্লাইটের জন্য প্রস্তুত',
+    'admin.kpi.uploaded': 'হাইপারস্পেকট্রাল আপলোড সম্পন্ন',
+    'admin.kpi.uploadedSub': 'সম্পন্ন ড্রোন ডেটাসেট',
+    'admin.tab.all': 'সব অনুরোধ',
+    'admin.tab.pending': 'পর্যালোচনার অপেক্ষায়',
+    'admin.tab.approved': 'অনুমোদিত',
+    'admin.tab.uploaded': 'ইমেজ আপলোড সম্পন্ন',
+    'admin.searchPlaceholder': 'খামারের নাম, ইমেইল, জেলা বা ফসল দিয়ে খুঁজুন...',
+    'admin.th.id': 'অনুরোধ আইডি ও তারিখ',
+    'admin.th.user': 'ব্যবহারকারী / খামার',
+    'admin.th.district': 'জেলা ও জমির পরিমাণ',
+    'admin.th.crop': 'লক্ষ্য ফসল',
+    'admin.th.status': 'অবস্থা',
+    'admin.th.spectral': 'হাইপারস্পেকট্রাল ডেটাসেট',
+    'admin.th.actions': 'পদক্ষেপ',
+    'admin.status.pending': 'পর্যালোচনার অপেক্ষায়',
+    'admin.status.approved': 'অনুমোদিত',
+    'admin.status.uploaded': 'ইমেজ আপলোড সম্পন্ন',
+    'admin.spectral.awaiting': 'অনুমোদনের অপেক্ষায়',
+    'admin.spectral.ready': 'ড্রোন আপলোডের জন্য প্রস্তুত',
+    'admin.spectral.readyCount': '✓ ১টি ডেটাসেট প্রস্তুত',
+    'admin.btn.approve': 'অনুমোদন করুন',
+    'admin.btn.upload': '+ ড্রোন ইমেজ আপলোড',
+    'admin.btn.inspect': 'প্রেসক্রিপশন দেখুন',
+    'admin.btn.reupload': 'পুনরায় আপলোড',
+
+    // Auth (Login & Signup)
+    'auth.growerTab': '🌱 চাষী / খামার লগইন',
+    'auth.adminTab': '🛡️ অ্যাডমিন পোর্টাল',
+    'auth.welcome': 'স্বাগতম',
+    'auth.welcomeSub': 'আপনার অ্যাকাউন্টে লগইন করুন',
+    'auth.adminGateway': 'অ্যাডমিন গেটওয়ে',
+    'auth.adminGatewaySub': 'অ্যাডমিনিস্ট্রেটর গেটওয়ে ও ব্যবহারকারী ড্যাশবোর্ড এক্সেস',
+    'auth.usernameLabel': 'ব্যবহারকারীর নাম বা ইমেইল ঠিকানা',
+    'auth.passwordLabel': 'পাসওয়ার্ড',
+    'auth.rememberMe': 'তথ্য মনে রাখুন',
+    'auth.signIn': 'লগইন করুন',
+    'auth.signInAdmin': 'অ্যাডমিন হিসেবে ড্যাশবোর্ডে প্রবেশ করুন →',
+    'auth.signUp': 'সাইন আপ',
+    'auth.createAccount': 'নতুন অ্যাকাউন্ট তৈরি করুন',
+    'auth.createAccountSub': '১,২০০+ বাণিজ্যিক চাষীদের সাথে যোগ দিন যারা ফাইটোগার্ড এআই দিয়ে মাঠ সুরক্ষা করছেন',
+    'auth.forgotPassword': 'পাসওয়ার্ড ভুলে গেছেন?',
+    'auth.haveAccount': 'ইতিমধ্যে অ্যাকাউন্ট আছে?',
+    'auth.noAccount': 'কোনো অ্যাকাউন্ট নেই?',
+    'auth.roleHintGrower': 'চাষী:',
+    'auth.roleHintAdmin': 'অ্যাডমিন:',
+
+    // Common
+    'common.close': 'বন্ধ করুন',
+    'common.cancel': 'বাতিল',
+    'common.submit': 'জমা দিন',
+    'common.save': 'সংরক্ষণ করুন',
+    'common.hectares': 'হেক্টর',
+    'common.flights': 'ফ্লাইট'
+  }
+};
+
+const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+export function getLang() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'bn' || saved === 'en') return saved;
+  } catch (e) {
+    // fallback
+  }
+  return 'en';
+}
+
+export function setLang(lang) {
+  const target = lang === 'bn' ? 'bn' : 'en';
+  try {
+    localStorage.setItem(STORAGE_KEY, target);
+  } catch (e) {
+    // ignore
+  }
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = target;
+    document.body.dataset.lang = target;
+  }
+  return target;
+}
+
+export function toggleLang() {
+  const current = getLang();
+  const next = current === 'en' ? 'bn' : 'en';
+  setLang(next);
+  return next;
+}
+
+export function t(key, fallback = '') {
+  const lang = getLang();
+  const dict = translations[lang] || translations.en;
+  if (dict && dict[key] !== undefined) {
+    return dict[key];
+  }
+  if (translations.en && translations.en[key] !== undefined) {
+    return translations.en[key];
+  }
+  return fallback || key;
+}
+
+export function formatNumber(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  if (getLang() !== 'bn') return str;
+  return str.replace(/\d/g, (d) => BENGALI_DIGITS[parseInt(d, 10)]);
+}
