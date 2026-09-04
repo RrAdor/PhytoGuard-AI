@@ -26,7 +26,6 @@ Built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
 
 - [About](#-about)
 - [How It Works](#-how-it-works)
-- [Results](#-results)
 - [Tech Stack](#-tech-stack)
 - [Getting Started](#-getting-started)
   - [Development](#development)
@@ -35,7 +34,7 @@ Built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
 - [Project Structure](#-project-structure)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
-- [License](#-license)
+
 
 ---
 
@@ -43,7 +42,7 @@ Built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
 
 PhytoGuard AI classifies crop leaf health directly from **hyperspectral imagery** — 125-band pixel data captured well beyond the visible RGB spectrum — to distinguish **Healthy**, **Rust-infected**, and **Other** conditions before disease is visible to the naked eye. Early, non-invasive detection like this can help growers intervene before an outbreak spreads across a field.
 
-This repo is the frontend for the project: a Vite-powered site presenting the model, its results, and a demo interface, built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
+This repo is the frontend for the project: a Vite-powered site presenting the model, its results, and a demo interface
 
 ## 🔬 How It Works
 
@@ -60,25 +59,7 @@ The pipeline behind PhytoGuard AI, from raw hyperspectral cube to prediction:
 
 > Why PCA+LDA before the CNN instead of raw 125-band input? It keeps the network small and fast to train on a modest dataset (~590 images) while explicitly injecting class-discriminative structure (via LDA) alongside general variance (via PCA) — a practical fit for the compute/time constraints of a competition setting.
 
-## 📊 Results
 
-Best model (checkpoint from epoch 7, selected on validation loss):
-
-| Metric | Score |
-|---|---|
-| **Test Accuracy** | **62.9%** |
-| Macro F1 | 0.630 |
-| Weighted F1 | 0.631 |
-
-Per-class breakdown (test set, n=89):
-
-| Class | Precision | Recall | F1 |
-|---|---|---|---|
-| Health | 0.487 | 0.600 | 0.537 |
-| Rust | 0.609 | 0.483 | 0.539 |
-| Other | 0.828 | 0.800 | 0.814 |
-
-> "Other" is the most reliably separated class; Health and Rust show more confusion with each other, consistent with the model catching early/ambiguous disease stages rather than only obvious cases. Swap in your training curve, confusion matrix, and ROC images (saved by the notebook as `training_curves.png`, `confusion_matrix.png`, `roc_curves.png`) here as figures once you have the assets in `public/assets/`.
 
 ## 🛠️ Tech Stack
 
@@ -88,7 +69,7 @@ Per-class breakdown (test set, n=89):
 | Frontend language | JavaScript |
 | Model training | PyTorch |
 | Feature extraction | scikit-learn (Incremental PCA, LDA) |
-| Data format | Hyperspectral `.tif` (125 bands, 64×64) |
+| Data format | Hyperspectral `.tif`  |
 
 ## 🚀 Getting Started
 
@@ -149,12 +130,3 @@ Contributions are welcome! Please open an issue to discuss what you'd like to ch
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-<div align="center">
-Built by <a href="https://github.com/RrAdor">RrAdor</a> for the Beyond Visible Spectrum: AI for Agriculture competition
-</div>
