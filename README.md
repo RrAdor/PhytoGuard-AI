@@ -4,7 +4,7 @@
 
 **Detecting crop disease beyond what the human eye can see — using hyperspectral imaging and deep learning.**
 
-Built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
+
 
 [![Made with Vite](https://img.shields.io/badge/Made%20with-Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![PyTorch](https://img.shields.io/badge/Model-PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
@@ -17,7 +17,7 @@ Built for the **Beyond Visible Spectrum: AI for Agriculture** competition.
 
 <!-- Swap for an actual screenshot/GIF of the deployed site -->
 <div align="center">
-  <img src="public/assets/screenshot-hero.png" alt="PhytoGuard AI screenshot" width="80%">
+  <img src="public/assets/phytoguard.png" alt="PhytoGuard AI screenshot" width="80%">
 </div>
 
 ---
