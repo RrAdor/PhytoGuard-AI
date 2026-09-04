@@ -1633,22 +1633,26 @@ function getKbIcon(name) {
 }
 
 function knowledgeBasePage() {
+  const isBn = getLang() === 'bn';
   return `
     <div class="kb-page">
       <section class="kb-hero-banner">
         <div class="kb-hero-content-wrap">
           <div class="kb-hero-left">
-            <h1 class="kb-hero-title">Hello. How can we help you?</h1>
+            <h1 class="kb-hero-title">${isBn ? 'হ্যালো। বাংলাদেশ কৃষি তথ্যভান্ডারে আপনাকে স্বাগতম।' : 'Hello. How can we help your Bangladesh farm?'}</h1>
+            <p class="kb-hero-desc" style="color: rgba(255,255,255,0.85); font-size: 0.95rem; margin-top: 0.5rem; margin-bottom: 1.25rem;">
+              ${isBn ? 'বাংলাদেশ বেসামরিক বিমান চলাচল কর্তৃপক্ষ (CAAB) নিয়মাবলী, বারী/ব্রি জাত, ব্লাস্ট ও লেট ব্লাইট দমন এবং আধুনিক কৃষি ড্রোন ব্যবহারের প্রামাণ্য নির্দেশিকা।' : 'Official technical repository for CAAB drone regulations, BARI/BRRI crop genetics, wheat blast & potato blight scouting, and precision aerial agronomy in Bangladesh.'}
+            </p>
             <div class="kb-search-box-wrap">
               <input
                 type="text"
                 id="kb-search-input"
                 class="kb-search-input"
-                placeholder="Search for answers..."
+                placeholder="${isBn ? 'ড্রোন, ব্লাস্ট, আলু ব্লাইট, CAAB বা বারী জাত অনুসন্ধান করুন...' : 'Search for drone rules, CAAB, wheat blast, late blight, BARI...'}"
                 autocomplete="off"
-                aria-label="Search knowledge base articles"
+                aria-label="${isBn ? 'নলেজ বেস আর্টিকেল অনুসন্ধান করুন' : 'Search knowledge base articles'}"
               />
-              <button class="kb-search-btn" type="button" id="kb-search-trigger" aria-label="Search">
+              <button class="kb-search-btn" type="button" id="kb-search-trigger" aria-label="${isBn ? 'অনুসন্ধান' : 'Search'}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -1666,11 +1670,11 @@ function knowledgeBasePage() {
               <div class="kb-mockup-screen">
                 <img src="/assets/crop-potato.jpg" alt="Drone leaf inspection preview" />
                 <div class="kb-bbox-spot" style="top: 28%; left: 32%; width: 44%; height: 38%;">
-                  <span class="kb-bbox-badge">AI 98.4% · Late Blight</span>
+                  <span class="kb-bbox-badge">${isBn ? 'এআই ৯৮.৪% · আলু লেট ব্লাইট (মুন্সীগঞ্জ)' : 'AI 98.4% · Potato Late Blight (Munshiganj)'}</span>
                 </div>
                 <div class="kb-mockup-hud">
                   <span class="kb-hud-dot"></span>
-                  <span>Autonomous Drone Feed</span>
+                  <span>${isBn ? 'কৃষি ড্রোন মাল্টিস্পেকট্রাল লাইভ' : 'Mavic 3M Multispectral Feed'}</span>
                 </div>
               </div>
             </div>
@@ -1681,9 +1685,9 @@ function knowledgeBasePage() {
       <div class="kb-main-container">
         <div id="kb-no-results" class="kb-no-results" style="display: none;">
           <div class="no-results-icon">🔍</div>
-          <h3>No matching articles found</h3>
-          <p>Try searching for keywords like "drone", "blight", "mission", "export", or "flight".</p>
-          <button class="button secondary" type="button" id="kb-clear-search-btn">Clear Search</button>
+          <h3>${isBn ? 'কোনো আর্টিকেল খুঁজে পাওয়া যায়নি' : 'No matching articles found'}</h3>
+          <p>${isBn ? 'অনুগ্রহ করে "ড্রোন", "ব্লাস্ট", "মুন্সীগঞ্জ", "CAAB", "লেট ব্লাইট", বা "সার" লিখে অনুসন্ধান করুন।' : 'Try searching for keywords like "drone", "CAAB", "blast", "potato", "Munshiganj", "Bogura", or "spray".'}</p>
+          <button class="button secondary" type="button" id="kb-clear-search-btn">${isBn ? 'অনুসন্ধান রিসেট করুন' : 'Clear Search'}</button>
         </div>
 
         <div class="kb-categories-grid" id="kb-categories-grid">
@@ -1692,18 +1696,18 @@ function knowledgeBasePage() {
               <div class="kb-cat-icon-badge" aria-hidden="true">
                 ${getKbIcon(cat.icon)}
               </div>
-              <h2 class="kb-cat-title">${cat.title}</h2>
-              <p class="kb-cat-subtitle">${cat.subtitle}</p>
+              <h2 class="kb-cat-title">${isBn ? (cat.title_bn || cat.title) : cat.title}</h2>
+              <p class="kb-cat-subtitle">${isBn ? (cat.subtitle_bn || cat.subtitle) : cat.subtitle}</p>
               <ul class="kb-article-links">
                 ${cat.articles.map(art => `
                   <li class="kb-article-item" data-art-slug="${art.slug}">
                     <a href="#${art.slug}" class="kb-article-link" data-kb-slug="${art.slug}">
-                      ${art.title}
+                      ${isBn ? (art.title_bn || art.title) : art.title}
                     </a>
                   </li>
                 `).join('')}
               </ul>
-              <a href="#cat-${cat.id}" class="kb-see-more-link" data-kb-cat="${cat.id}">See more &rarr;</a>
+              <a href="#cat-${cat.id}" class="kb-see-more-link" data-kb-cat="${cat.id}">${isBn ? 'আরও দেখুন &rarr;' : 'See more &rarr;'}</a>
             </article>
           `).join('')}
         </div>
@@ -1714,27 +1718,27 @@ function knowledgeBasePage() {
         <div class="kb-modal-dialog">
           <div class="kb-modal-header">
             <div class="kb-modal-breadcrumbs">
-              <span id="kb-modal-cat-crumb">Knowledge Base</span>
+              <span id="kb-modal-cat-crumb">${isBn ? 'নলেজ বেস' : 'Knowledge Base'}</span>
               <span class="crumb-separator">/</span>
-              <span class="crumb-current">Article</span>
+              <span class="crumb-current">${isBn ? 'আর্টিকেল' : 'Article'}</span>
             </div>
-            <button type="button" class="kb-modal-close-btn" id="kb-modal-close" aria-label="Close article">&times;</button>
+            <button type="button" class="kb-modal-close-btn" id="kb-modal-close" aria-label="${isBn ? 'বন্ধ করুন' : 'Close article'}">&times;</button>
           </div>
           <div class="kb-modal-body">
             <h2 id="kb-modal-title" class="kb-modal-heading"></h2>
             <div class="kb-modal-meta">
-              <span class="kb-badge-pill">Drone Scouting Standard</span>
-              <span class="kb-reading-time">3 min read</span>
+              <span class="kb-badge-pill">${isBn ? 'বাংলাদেশ কৃষি ও সিএএবি মানদণ্ড' : 'CAAB & BARI Agri-Standard'}</span>
+              <span class="kb-reading-time">${isBn ? '৩ মিনিট পাঠ' : '3 min read'}</span>
             </div>
             <div id="kb-modal-content" class="kb-modal-prose"></div>
           </div>
           <div class="kb-modal-footer">
             <div class="kb-helpful-prompt" id="kb-helpful-container">
-              <span>Was this article helpful?</span>
-              <button type="button" class="kb-feedback-btn" id="kb-feedback-yes">Yes 👍</button>
-              <button type="button" class="kb-feedback-btn" id="kb-feedback-no">No 👎</button>
+              <span>${isBn ? 'এই আর্টিকেলটি কি আপনার জন্য সহায়ক ছিল?' : 'Was this article helpful?'}</span>
+              <button type="button" class="kb-feedback-btn" id="kb-feedback-yes">${isBn ? 'হ্যাঁ 👍' : 'Yes 👍'}</button>
+              <button type="button" class="kb-feedback-btn" id="kb-feedback-no">${isBn ? 'না 👎' : 'No 👎'}</button>
             </div>
-            <button type="button" class="button secondary" id="kb-modal-done-btn">Back to Knowledge Base</button>
+            <button type="button" class="button secondary" id="kb-modal-done-btn">${isBn ? 'নলেজ বেসে ফিরে যান' : 'Back to Knowledge Base'}</button>
           </div>
         </div>
       </div>
@@ -1759,6 +1763,7 @@ function setupKnowledgeBaseEvents() {
   const helpfulContainer = document.querySelector('#kb-helpful-container');
 
   function openArticle(slug) {
+    const isBn = getLang() === 'bn';
     let foundArticle = null;
     let foundCategory = null;
     for (const cat of kbCategories) {
@@ -1771,19 +1776,20 @@ function setupKnowledgeBaseEvents() {
     }
     if (!foundArticle || !modal) return;
 
-    if (modalCatCrumb) modalCatCrumb.textContent = foundCategory.title;
-    if (modalTitle) modalTitle.textContent = foundArticle.title;
-    if (modalContent) modalContent.innerHTML = foundArticle.content;
+    if (modalCatCrumb) modalCatCrumb.textContent = isBn ? (foundCategory.title_bn || foundCategory.title) : foundCategory.title;
+    if (modalTitle) modalTitle.textContent = isBn ? (foundArticle.title_bn || foundArticle.title) : foundArticle.title;
+    if (modalContent) modalContent.innerHTML = isBn ? (foundArticle.content_bn || foundArticle.content) : foundArticle.content;
     if (helpfulContainer) {
       helpfulContainer.innerHTML = `
-        <span>Was this article helpful?</span>
-        <button type="button" class="kb-feedback-btn" id="kb-feedback-yes">Yes 👍</button>
-        <button type="button" class="kb-feedback-btn" id="kb-feedback-no">No 👎</button>
+        <span>${isBn ? 'এই আর্টিকেলটি কি আপনার জন্য সহায়ক ছিল?' : 'Was this article helpful?'}</span>
+        <button type="button" class="kb-feedback-btn" id="kb-feedback-yes">${isBn ? 'হ্যাঁ 👍' : 'Yes 👍'}</button>
+        <button type="button" class="kb-feedback-btn" id="kb-feedback-no">${isBn ? 'না 👎' : 'No 👎'}</button>
       `;
       const yesBtn = helpfulContainer.querySelector('#kb-feedback-yes');
       const noBtn = helpfulContainer.querySelector('#kb-feedback-no');
-      if (yesBtn) yesBtn.onclick = () => { helpfulContainer.innerHTML = '<em>Thank you for your feedback!</em>'; };
-      if (noBtn) noBtn.onclick = () => { helpfulContainer.innerHTML = '<em>Thank you for your feedback!</em>'; };
+      const thankMsg = isBn ? '<em>আপনার মতামতের জন্য ধন্যবাদ!</em>' : '<em>Thank you for your feedback!</em>';
+      if (yesBtn) yesBtn.onclick = () => { helpfulContainer.innerHTML = thankMsg; };
+      if (noBtn) noBtn.onclick = () => { helpfulContainer.innerHTML = thankMsg; };
     }
 
     modal.style.display = 'flex';
@@ -1826,6 +1832,7 @@ function setupKnowledgeBaseEvents() {
   function doSearch() {
     if (!searchInput) return;
     const query = searchInput.value.trim().toLowerCase();
+    const isBn = getLang() === 'bn';
 
     if (!query) {
       if (searchCount) searchCount.style.display = 'none';
@@ -1849,15 +1856,32 @@ function setupKnowledgeBaseEvents() {
       card.querySelectorAll('.kb-article-item').forEach(item => {
         const slug = item.dataset.artSlug;
         const art = cat ? cat.articles.find(a => a.slug === slug) : null;
-        if (art && (
-          art.title.toLowerCase().includes(query) ||
-          art.excerpt.toLowerCase().includes(query) ||
-          art.content.toLowerCase().includes(query) ||
-          cat.title.toLowerCase().includes(query)
-        )) {
-          item.style.display = '';
-          catMatches++;
-          totalMatches++;
+        if (art) {
+          const artTitle = (art.title || '').toLowerCase();
+          const artTitleBn = (art.title_bn || '').toLowerCase();
+          const artExcerpt = (art.excerpt || '').toLowerCase();
+          const artExcerptBn = (art.excerpt_bn || '').toLowerCase();
+          const artContent = (art.content || '').toLowerCase();
+          const artContentBn = (art.content_bn || '').toLowerCase();
+          const catTitle = (cat.title || '').toLowerCase();
+          const catTitleBn = (cat.title_bn || '').toLowerCase();
+
+          if (
+            artTitle.includes(query) ||
+            artTitleBn.includes(query) ||
+            artExcerpt.includes(query) ||
+            artExcerptBn.includes(query) ||
+            artContent.includes(query) ||
+            artContentBn.includes(query) ||
+            catTitle.includes(query) ||
+            catTitleBn.includes(query)
+          ) {
+            item.style.display = '';
+            catMatches++;
+            totalMatches++;
+          } else {
+            item.style.display = 'none';
+          }
         } else {
           item.style.display = 'none';
         }
@@ -1879,7 +1903,9 @@ function setupKnowledgeBaseEvents() {
       if (noResults) noResults.style.display = 'none';
       if (searchCount) {
         searchCount.style.display = 'block';
-        searchCount.textContent = `Found ${totalMatches} article${totalMatches === 1 ? '' : 's'} matching "${query}"`;
+        searchCount.textContent = isBn
+          ? `"${query}" এর জন্য ${formatNumber(totalMatches)}টি আর্টিকেল পাওয়া গেছে`
+          : `Found ${totalMatches} article${totalMatches === 1 ? '' : 's'} matching "${query}"`;
       }
     }
   }
@@ -5158,7 +5184,7 @@ function render() {
   else if (path === '/crops') document.title = 'PhytoGuard AI - Main Crops';
   else if (path === '/how-it-works') document.title = 'PhytoGuard AI - How It Works';
   else if (path === '/plans') document.title = 'PhytoGuard AI - Plans & Pricing';
-  else if (path === '/knowledge-base' || path === '/about') document.title = 'PhytoGuard AI - Knowledge Base & Help Center';
+  else if (path === '/knowledge-base' || path === '/about') document.title = getLang() === 'bn' ? 'ফাইটোগার্ড এআই - বাংলাদেশ কৃষি তথ্যভান্ডার' : 'PhytoGuard AI - Bangladesh Agricultural Knowledge Base';
   else if (crop) document.title = `PhytoGuard AI - ${crop.name} Monitoring`;
   else document.title = 'PhytoGuard AI - AI crop monitoring';
 }
