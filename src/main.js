@@ -1,5 +1,5 @@
 import './styles.css';
-import { cropList, features, plans, productCatalog, kbCategories } from './data.js';
+import { cropList, features, plans, productCatalog, kbCategories, getDiseaseRecommendation } from './data.js';
 import { t, getLang, setLang, toggleLang, formatNumber } from './i18n.js';
 import {
   isSupabaseConfigured,
@@ -22,21 +22,65 @@ const app = document.querySelector('#app');
 
 // Standard Authentication Helpers
 function getStoredUsers() {
+  const defaultAdor = {
+    name: 'Ador',
+    firstName: 'Ador',
+    lastName: '',
+    email: 'ador@phytoguard.ai',
+    phone: '+880 1700-000000',
+    password: 'password123',
+    role: 'grower'
+  };
+  const defaultAdmin = {
+    name: 'System Administrator',
+    firstName: 'Admin',
+    lastName: 'Command',
+    email: 'admin@phytoguard.ai',
+    phone: '+880 1700-ADMIN',
+    password: 'admin',
+    role: 'admin'
+  };
+
   try {
     const raw = localStorage.getItem('phyto_users');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        if (!parsed.some(u => (u.email || '').toLowerCase() === 'admin@phytoguard.ai')) {
-          parsed.push({
-            name: 'System Administrator',
-            firstName: 'Admin',
-            lastName: 'Command',
-            email: 'admin@phytoguard.ai',
-            phone: '+880 1700-ADMIN',
-            password: 'admin',
-            role: 'admin'
-          });
+        let changed = false;
+
+        // Ensure ador@phytoguard.ai is ALWAYS present and has correct credentials
+        const adorIndex = parsed.findIndex(u => (u.email || '').toLowerCase() === 'ador@phytoguard.ai' || (u.name || '').toLowerCase() === 'ador');
+        if (adorIndex === -1) {
+          parsed.unshift(defaultAdor);
+          changed = true;
+        } else {
+          const ador = parsed[adorIndex];
+          if (ador.name !== 'Ador' || ador.firstName !== 'Ador' || ador.lastName !== '' || ador.password !== 'password123') {
+            ador.name = 'Ador';
+            ador.firstName = 'Ador';
+            ador.lastName = '';
+            ador.email = 'ador@phytoguard.ai';
+            ador.password = 'password123';
+            ador.role = 'grower';
+            changed = true;
+          }
+        }
+
+        // Ensure admin@phytoguard.ai is ALWAYS present
+        const adminIndex = parsed.findIndex(u => (u.email || '').toLowerCase() === 'admin@phytoguard.ai');
+        if (adminIndex === -1) {
+          parsed.push(defaultAdmin);
+          changed = true;
+        } else {
+          const admin = parsed[adminIndex];
+          if (admin.password !== 'admin' || admin.role !== 'admin') {
+            admin.password = 'admin';
+            admin.role = 'admin';
+            changed = true;
+          }
+        }
+
+        if (changed) {
           try { localStorage.setItem('phyto_users', JSON.stringify(parsed)); } catch (e) {}
         }
         return parsed;
@@ -45,26 +89,7 @@ function getStoredUsers() {
   } catch (e) {
     console.error('Error reading users from localStorage', e);
   }
-  const defaultUsers = [
-    {
-      name: 'Ador Chowdhury',
-      firstName: 'Ador',
-      lastName: 'Chowdhury',
-      email: 'ador@phytoguard.ai',
-      phone: '+880 1700-000000',
-      password: 'password123',
-      role: 'grower'
-    },
-    {
-      name: 'System Administrator',
-      firstName: 'Admin',
-      lastName: 'Command',
-      email: 'admin@phytoguard.ai',
-      phone: '+880 1700-ADMIN',
-      password: 'admin',
-      role: 'admin'
-    }
-  ];
+  const defaultUsers = [defaultAdor, defaultAdmin];
   try {
     localStorage.setItem('phyto_users', JSON.stringify(defaultUsers));
   } catch (e) {}
@@ -78,6 +103,23 @@ function getStoredDemoRequests() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        let changed = false;
+        parsed.forEach(r => {
+          const email = (r.email || '').toLowerCase().trim();
+          const name = (r.name || '').toLowerCase().trim();
+          if (
+            email === 'ador@phytoguard.ai' ||
+            name === 'ador chowdhury' ||
+            name.includes('ador chowdhury') ||
+            r.id === 'REQ-2026-081'
+          ) {
+            r.name = 'Ador';
+            changed = true;
+          }
+        });
+        if (changed) {
+          try { localStorage.setItem('phyto_demo_requests', JSON.stringify(parsed)); } catch (e) {}
+        }
         return parsed;
       }
     }
@@ -88,7 +130,7 @@ function getStoredDemoRequests() {
   const defaultRequests = [
     {
       id: 'REQ-2026-081',
-      name: 'Ador Chowdhury',
+      name: 'Ador',
       email: 'ador@phytoguard.ai',
       phone: '+880 1700-000000',
       company: 'Chowdhury Agrotech Farms',
@@ -178,10 +220,234 @@ function saveStoredDemoRequests(requests) {
   }
 }
 
+// Farmer Cards Store & Local Management
+function getStoredFarmerCards() {
+  const defaultFarmerCards = [
+    {
+      id: 'KRC-001',
+      userEmail: 'ador@phytoguard.ai',
+      farmerName: 'Ador',
+      cardNumber: 'KRC-BD-2026-88017',
+      district: 'Bogura',
+      upazila: 'Santhahar',
+      fieldSize: '40 Hectares',
+      primaryCrop: 'Tomatoes',
+      phone: '+880 1700-000000',
+      nid: '1992-1082-9481-02',
+      category: 'Commercial Grower',
+      issueDate: '2026-01-15',
+      status: 'Verified Active',
+      notes: 'High-density commercial tomato acreage under active DJI Matrice 350 RTK surveillance.'
+    },
+    {
+      id: 'KRC-002',
+      userEmail: 'rafiq@greenfields.bd',
+      farmerName: 'Md. Rafiqul Islam',
+      cardNumber: 'KRC-BD-2026-11409',
+      district: 'Dinajpur',
+      upazila: 'Birganj',
+      fieldSize: '25 Hectares',
+      primaryCrop: 'Wheat',
+      phone: '+880 1711-223344',
+      nid: '1985-5219-4820-11',
+      category: 'Commercial Grower',
+      issueDate: '2026-02-01',
+      status: 'Verified Active',
+      notes: 'Grain farming hub with regular Mavic 3M multispectral NDVI vegetation mapping.'
+    },
+    {
+      id: 'KRC-003',
+      userEmail: 'shamim@rangpur-agri.bd',
+      farmerName: 'Shamim Akhter',
+      cardNumber: 'KRC-BD-2026-77241',
+      district: 'Rangpur',
+      upazila: 'Mithapukur',
+      fieldSize: '18 Hectares',
+      primaryCrop: 'Potatoes',
+      phone: '+880 1722-334455',
+      nid: '1988-7320-1928-33',
+      category: 'Seed Multiplier',
+      issueDate: '2026-02-18',
+      status: 'Verified Active',
+      notes: 'Certified potato seed multiplication plot monitored for early blight infection.'
+    },
+    {
+      id: 'KRC-004',
+      userEmail: 'nurul@rajshahi-crops.bd',
+      farmerName: 'Nurul Hasan',
+      cardNumber: 'KRC-BD-2026-33921',
+      district: 'Rajshahi',
+      upazila: 'Paba',
+      fieldSize: '32 Hectares',
+      primaryCrop: 'Corn',
+      phone: '+880 1733-445566',
+      nid: '1990-8419-5830-44',
+      category: 'Smallholder Farmer',
+      issueDate: '2026-03-02',
+      status: 'Verified Active',
+      notes: 'Sweetcorn acreage with drone variable-rate nitrogen prescription application.'
+    }
+  ];
+
+  try {
+    const raw = localStorage.getItem('phyto_farmer_cards');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        let changed = false;
+        parsed.forEach((c) => {
+          if (!c.userEmail) {
+            const name = (c.farmerName || '').toLowerCase();
+            if (name.includes('ador') || c.id === 'KRC-001') c.userEmail = 'ador@phytoguard.ai';
+            else if (name.includes('rafiq')) c.userEmail = 'rafiq@greenfields.bd';
+            else if (name.includes('shamim')) c.userEmail = 'shamim@rangpur-agri.bd';
+            else if (name.includes('nurul')) c.userEmail = 'nurul@rajshahi-crops.bd';
+            else c.userEmail = 'ador@phytoguard.ai';
+            changed = true;
+          }
+        });
+        if (changed) {
+          try { localStorage.setItem('phyto_farmer_cards', JSON.stringify(parsed)); } catch (e) {}
+        }
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Error reading farmer cards from localStorage', e);
+  }
+
+  try {
+    localStorage.setItem('phyto_farmer_cards', JSON.stringify(defaultFarmerCards));
+  } catch (e) {}
+  return defaultFarmerCards;
+}
+
+function saveStoredFarmerCards(cards) {
+  try {
+    localStorage.setItem('phyto_farmer_cards', JSON.stringify(cards));
+  } catch (e) {
+    console.error('Error saving farmer cards', e);
+  }
+}
+
+function getFarmerCardsForUser(user) {
+  if (!user) return [];
+  const allCards = getStoredFarmerCards();
+  const userEmail = (user.email || '').toLowerCase().trim();
+  const userName = (user.name || user.firstName || '').toLowerCase().trim();
+
+  // If System Administrator is logged in, show all cards
+  if (user.role === 'admin' || userEmail === 'admin@phytoguard.ai') {
+    return allCards;
+  }
+
+  // Normal logged-in grower: strictly return cards belonging to this user
+  return allCards.filter(c => {
+    const cardEmail = (c.userEmail || '').toLowerCase().trim();
+    const cardFarmerName = (c.farmerName || '').toLowerCase().trim();
+
+    if (cardEmail && cardEmail === userEmail) return true;
+    if (userEmail === 'ador@phytoguard.ai' && (cardFarmerName === 'ador' || c.id === 'KRC-001')) return true;
+    if (!cardEmail && userName && (cardFarmerName === userName || cardFarmerName.includes(userName))) return true;
+    return false;
+  });
+}
+
+function addFarmerCard(cardData) {
+  const cards = getStoredFarmerCards();
+  const currentUser = getCurrentUser();
+  const userEmail = (currentUser && currentUser.email ? currentUser.email : (cardData.userEmail || '')).toLowerCase().trim();
+  const farmerName = (cardData.farmerName || (currentUser ? currentUser.name : '')).trim() || 'Grower';
+
+  const newCard = {
+    id: 'KRC-' + Date.now().toString().slice(-5),
+    userEmail: userEmail,
+    farmerName: farmerName,
+    cardNumber: (cardData.cardNumber || '').trim(),
+    district: (cardData.district || '').trim(),
+    upazila: (cardData.upazila || '').trim(),
+    fieldSize: (cardData.fieldSize || '').trim(),
+    primaryCrop: (cardData.primaryCrop || 'Tomatoes').trim(),
+    phone: (cardData.phone || (currentUser ? currentUser.phone : '')).trim() || '+880 1700-000000',
+    nid: (cardData.nid || '').trim() || 'N/A',
+    category: cardData.category || 'Commercial Grower',
+    issueDate: cardData.issueDate || new Date().toISOString().split('T')[0],
+    status: 'Verified Active',
+    notes: (cardData.notes || '').trim()
+  };
+  cards.unshift(newCard);
+  saveStoredFarmerCards(cards);
+  return newCard;
+}
+
+function deleteFarmerCard(id) {
+  const currentUser = getCurrentUser();
+  const cards = getStoredFarmerCards();
+  const filtered = cards.filter(c => {
+    if (c.id === id || c.cardNumber === id) {
+      if (!currentUser) return true; // keep if not logged in
+      const isAdmin = currentUser.role === 'admin' || (currentUser.email || '').toLowerCase() === 'admin@phytoguard.ai';
+      if (isAdmin) return false; // admin can delete
+
+      const email = (currentUser.email || '').toLowerCase().trim();
+      const cardEmail = (c.userEmail || '').toLowerCase().trim();
+      const cardName = (c.farmerName || '').toLowerCase().trim();
+
+      // Only delete if it belongs to the user
+      if (cardEmail === email || (email === 'ador@phytoguard.ai' && cardName === 'ador')) {
+        return false;
+      }
+      return true; // keep if not user's card
+    }
+    return true;
+  });
+  saveStoredFarmerCards(filtered);
+  return filtered;
+}
+
+function formatUserName(user) {
+  if (!user) return 'User';
+  const email = (user.email || '').toLowerCase().trim();
+  const rawName = (user.name || user.firstName || '').trim();
+  const first = (user.firstName || '').toLowerCase().trim();
+  const last = (user.lastName || '').toLowerCase().trim();
+  if (
+    email === 'ador@phytoguard.ai' ||
+    rawName.toLowerCase() === 'ador chowdhury' ||
+    rawName.toLowerCase().includes('ador chowdhury') ||
+    (first === 'ador' && (last === 'chowdhury' || !last))
+  ) {
+    return 'Ador';
+  }
+  return rawName || 'User';
+}
+
 function getCurrentUser() {
   try {
     const raw = localStorage.getItem('phyto_current_user');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const user = JSON.parse(raw);
+      if (user) {
+        const email = (user.email || '').toLowerCase().trim();
+        const rawName = (user.name || '').trim().toLowerCase();
+        const first = (user.firstName || '').trim().toLowerCase();
+        const last = (user.lastName || '').trim().toLowerCase();
+        if (
+          email === 'ador@phytoguard.ai' ||
+          rawName === 'ador chowdhury' ||
+          rawName.includes('ador chowdhury') ||
+          (first === 'ador' && (last === 'chowdhury' || !last))
+        ) {
+          user.name = 'Ador';
+          user.firstName = 'Ador';
+          user.lastName = '';
+          try {
+            localStorage.setItem('phyto_current_user', JSON.stringify(user));
+          } catch (e) {}
+        }
+      }
+      return user;
+    }
   } catch (e) {
     console.error('Error reading current user from localStorage', e);
   }
@@ -195,6 +461,22 @@ function isDemoAccount(user) {
 }
 
 function setCurrentUser(user) {
+  if (user) {
+    const email = (user.email || '').toLowerCase().trim();
+    const rawName = (user.name || '').trim().toLowerCase();
+    const first = (user.firstName || '').trim().toLowerCase();
+    const last = (user.lastName || '').trim().toLowerCase();
+    if (
+      email === 'ador@phytoguard.ai' ||
+      rawName === 'ador chowdhury' ||
+      rawName.includes('ador chowdhury') ||
+      (first === 'ador' && (last === 'chowdhury' || !last))
+    ) {
+      user.name = 'Ador';
+      user.firstName = 'Ador';
+      user.lastName = '';
+    }
+  }
   try {
     localStorage.setItem('phyto_current_user', JSON.stringify(user));
   } catch (e) {
@@ -222,7 +504,8 @@ function link(path, label, extra = '') {
   const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
   const isCurrent = currentPath === path || 
     (path === '/crops' && (currentPath === '/crops' || currentPath.startsWith('/crops/'))) ||
-    ((path === '/about' || path === '/knowledge-base') && (currentPath === '/about' || currentPath === '/knowledge-base'));
+    ((path === '/about' || path === '/knowledge-base') && (currentPath === '/about' || currentPath === '/knowledge-base')) ||
+    (path === '/farmers-card' && (currentPath === '/farmers-card' || currentPath.startsWith('/farmers-card/')));
   const classes = [extra, isCurrent ? 'active' : ''].filter(Boolean).join(' ');
   return `<a class="${classes}" href="${path}" data-route>${label}</a>`;
 }
@@ -235,7 +518,7 @@ function getAllUsersForAdmin() {
   const predefinedProfiles = [
     {
       id: 'USER-001',
-      name: 'Ador Chowdhury',
+      name: 'Ador',
       firstName: 'Ador',
       email: 'ador@phytoguard.ai',
       company: 'Chowdhury Agrotech Farms',
@@ -373,6 +656,7 @@ function header() {
           ${link('/crops', t('nav.crops'))}
           ${link('/how-it-works', t('nav.howItWorks'))}
           ${link('/plans', t('nav.plans'))}
+          ${currentUser ? link('/farmers-card', t('nav.farmersCard')) : `<a class="nav-unlinked" href="/login?redirect=/farmers-card" data-route>${t('nav.farmersCard')}</a>`}
           ${link('/knowledge-base', t('nav.knowledgeBase'))}
         </nav>
       `}
@@ -387,8 +671,8 @@ function header() {
         ${currentUser ? `
           <div class="user-header-profile">
             <a class="login-link user-logged-btn ${isAdmin ? 'admin-user-btn' : ''}" href="/dashboard" data-route aria-label="${t('nav.dashboard')}" title="${isAdmin ? t('nav.adminTitle') : t('nav.dashboard')}">
-              <span class="user-avatar-badge" aria-hidden="true">${isAdmin ? '🛡️' : (currentUser.firstName || currentUser.name || 'U').charAt(0).toUpperCase()}</span>
-              <span class="user-name-label">${isAdmin ? t('nav.adminTitle') : (currentUser.name || currentUser.firstName || 'User')}</span>
+              <span class="user-avatar-badge" aria-hidden="true">${isAdmin ? '🛡️' : formatUserName(currentUser).charAt(0).toUpperCase()}</span>
+              <span class="user-name-label">${isAdmin ? t('nav.adminTitle') : formatUserName(currentUser)}</span>
             </a>
             <button class="header-logout-btn" type="button" aria-label="${t('nav.logout')}" title="${t('nav.logout')}">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -557,6 +841,7 @@ function footer() {
           ${link('/crops', t('nav.allCrops'))}
           ${link('/how-it-works', t('nav.howItWorks'))}
           ${link('/plans', t('nav.plans'))}
+          ${currentUser ? link('/farmers-card', t('nav.farmersCard')) : `<a href="/login?redirect=/farmers-card" data-route>${t('nav.farmersCard')}</a>`}
           ${link('/knowledge-base', t('nav.knowledgeBase'))}
           <a href="mailto:info@phytoguard.ai">info@phytoguard.ai</a>
         `}
@@ -599,11 +884,11 @@ function homePage() {
   const stepsTitle = isBn ? 'মাঠ থেকে সিদ্ধান্ত — মাত্র তিন ধাপে' : 'From field to decision in three steps';
   const stepsList = isBn ? [
     ['মাঠের সীমানা ম্যাপিং ও ফ্লাইট', 'আপনার মাঠের সীমানা চিহ্নিত করে সাধারণ বা মাল্টিস্পেকট্রাল সেন্সরযুক্ত ড্রোন স্বয়ংক্রিয়ভাবে পরিচালনা করুন।'],
-    ['এআই প্রতিটি পাতা স্ক্যান করে', 'ফাইটোগার্ড এআই পাতার স্তর পর্যন্ত রোগবালাই, ক্ষতিকর পোকা ও স্ট্রেস শনাক্ত করে মাঠজুড়ে ঝুঁকি চিহ্নিত করে।'],
+    ['এআই প্রতিটি পাতা স্ক্যান করে', 'ফাইটোগার্ড এআই পাতার স্তর পর্যন্ত রোগবালাই, ছত্রাক ও উদ্ভিদের স্ট্রেস শনাক্ত করে মাঠজুড়ে ঝুঁকি চিহ্নিত করে।'],
     ['আত্মবিশ্বাসের সাথে ব্যবস্থা নিন', 'স্প্রেয়ার ড্রোন বা স্প্রে মেশিনে সরাসরি প্রেরণের উপযোগী সুনির্দিষ্ট প্রেসক্রিপশন ম্যাপ, সতর্কতা ও পরামর্শ পান।']
   ] : [
     ['Capture your fields', 'Map your field boundaries and fly autonomous drone scans with standard or multispectral sensors.'],
-    ['AI scans every leaf', 'PhytoGuard AI detects pests, disease, and stress down to the leaf and flags risks across your fields.'],
+    ['AI scans every leaf', 'PhytoGuard AI detects crop diseases, foliar pathogens, and stress down to the leaf and flags risks across your fields.'],
     ['Act with confidence', 'Get prescription maps, alerts, and agronomy recommendations ready to send to the sprayer.'],
   ];
 
@@ -618,7 +903,7 @@ function homePage() {
 function whyPhytoGuardSection() {
   const isBn = getLang() === 'bn';
   const icons = [
-    // 1. Pest & disease detection (leaf droplet)
+    // 1. Crop disease detection (leaf droplet)
     `<svg class="why-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
     </svg>`,
@@ -651,11 +936,11 @@ function whyPhytoGuardSection() {
   ];
 
   const displayFeatures = isBn ? [
-    ['বালাই ও রোগবালাই শনাক্তকরণ', 'কলোরাডো আলু বিটল থেকে লেইট ব্লাইট পর্যন্ত — এআই প্রতিটি ঝুঁকি পাতার স্তরে শনাক্ত করে ছড়িয়ে পড়ার আগেই।'],
+    ['ফসলের রোগ শনাক্তকরণ', 'আর্লি ব্লাইট থেকে লেইট ব্লাইট ও উদ্ভিদের প্যাথোজেন — এআই প্রতিটি রোগ লক্ষণ প্রকাশের আগেই পাতার স্তরে শনাক্ত করে।'],
     ['প্রতি পরিদর্শনে আরও বেশি জমি স্কাউটিং', 'কম সময়ে বিশাল মাঠ পরিদর্শন করুন এবং সামগ্রিক ফসলের পুঙ্খানুপুঙ্খ চিত্র পান।'],
     ['ঝুঁকির তীব্রতা মূল্যায়ন', 'উচ্চ, মাঝারি ও নিম্ন ঝুঁকির রেটিং, যাতে আপনি নির্ভুলভাবে জানতে পারেন কোথায় প্রথম ব্যবস্থা নিতে হবে।'],
     ['নতুন সংক্রমণের তাৎক্ষণিক সতর্কতা', 'আপনার মাঠে লেইট ব্লাইট বা আর্লি ব্লাইটের মতো নতুন সংক্রমণ দেখা মাত্রই সতর্কবার্তা পান।'],
-    ['সুনির্দিষ্ট বালাইনাশক প্রয়োগ গাইড', 'রিপোর্টের ফলাফল থেকে তৈরি করুন স্প্রেয়ার ড্রোনের উপযোগী নির্ভুল স্প্রে পরিকল্পনা ও কৃষি পরামর্শ।'],
+    ['সুনির্দিষ্ট নিরাময় প্রয়োগ গাইড', 'রিপোর্টের ফলাফল থেকে তৈরি করুন স্প্রেয়ার ড্রোনের উপযোগী নির্ভুল স্প্রে পরিকল্পনা ও কৃষি পরামর্শ।'],
     ['একক ক্রপ ইন্টেলিজেন্স প্ল্যাটফর্ম', 'পরিদর্শন ছবি, ঝুঁকি মানচিত্র এবং কৃষি রিপোর্ট — সবই এক প্ল্যাটফর্মে, যেকোনো ডিভাইসে।']
   ] : features;
 
@@ -663,7 +948,7 @@ function whyPhytoGuardSection() {
     <section class="why-phyto-section">
       <div class="why-phyto-container">
         
-        <!-- Left Column: Pest & Disease Report #025292 Card -->
+        <!-- Left Column: Crop Disease Report #025292 Card -->
         <div class="report-column">
           <div class="report-card">
             <div class="report-window-dots" aria-hidden="true">
@@ -673,7 +958,7 @@ function whyPhytoGuardSection() {
             </div>
 
             <div class="report-meta-header">
-              <span class="report-code">${isBn ? 'বালাই ও রোগবালাই রিপোর্ট #০২৫২৯২' : 'Pests & Disease Report #025292'}</span>
+              <span class="report-code">${isBn ? 'ফসলের রোগবালাই রিপোর্ট #০২৫২৯২' : 'Crop Disease Report #025292'}</span>
               <span class="report-badge-new">
                 <span class="report-badge-dot" aria-hidden="true"></span>
                 <span>${isBn ? 'নতুন সংক্রমণ' : 'New infections'}</span>
@@ -697,10 +982,10 @@ function whyPhytoGuardSection() {
 
               <div class="finding-row">
                 <div class="finding-thumb">
-                  <img src="/assets/thumb-colorado-beetle.jpg" alt="Colorado beetle - larvae" />
+                  <img src="/assets/thumb-bacterial-spot.jpg" alt="Bacterial spot (early stage)" />
                 </div>
                 <div class="finding-info">
-                  <h4 class="finding-name">${isBn ? 'কলোরাডো বিটল - লার্ভা' : 'Colorado beetle - larvae'}</h4>
+                  <h4 class="finding-name">${isBn ? 'ব্যাকটেরিয়াল স্পট (প্রাথমিক লক্ষণ)' : 'Bacterial spot (early stage)'}</h4>
                   <p class="finding-source">${isBn ? 'মাঠ পরিদর্শন নমুনা' : 'Sample from field inspection'}</p>
                 </div>
                 <span class="finding-pill pill-med">${isBn ? 'মাঝারি' : 'Medium'}</span>
@@ -736,7 +1021,7 @@ function whyPhytoGuardSection() {
             </div>
 
             <p class="report-footer-note">
-              ${isBn ? 'আরও শনাক্ত হয়েছে: পূর্ণাঙ্গ কলোরাডো বিটল ও লার্ভা, ফ্লি বিটল, শিলাবৃষ্টির ক্ষত, লুপার আর্মি ওয়ার্ম ক্ষত, আগাছা ও কৃষি সরঞ্জামের আঘাত।' : 'Also found: Colorado beetle adults and larvae, flea beetles, hail damage, looper army worm damage, weeds, pest damage, and agricultural-tool damage.'}
+              ${isBn ? 'আরও শনাক্ত হয়েছে: আর্লি ব্লাইট ক্ষত, অল্টারনারিয়া পাতার দাগ, শারীরবৃত্তীয় স্ট্রেস, পুষ্টির ঘাটতি, শিলাবৃষ্টির ক্ষত এবং ক্লোরোসিস।' : 'Also inspected: Early blight lesions, Alternaria leaf spot, physiological stress, nutrient deficiency, hail damage, and foliar chlorosis.'}
             </p>
           </div>
 
@@ -901,7 +1186,7 @@ function cropsPage() {
         <span class="crops-eyebrow">${isBn ? 'প্রধান ফসলসমূহ' : 'Main crops'}</span>
         <h1 class="crops-main-title">${isBn ? 'যে ফসলগুলো মানবজাতিকে পুষ্টি জোগায় তাদের সুরক্ষায় প্রস্তুত' : 'Built for the crops that feed the world'}</h1>
         <p class="crops-main-subtitle">
-          ${isBn ? 'ফাইটোগার্ড এআই কৃষকদের সর্বাধিক নির্ভরশীল ফসলের পাতার স্তরে দৃষ্টি এবং এআই-চালিত রোগ ও বালাই শনাক্তকরণ নিশ্চিত করে।' : 'PhytoGuard AI delivers leaf-level visibility and AI-powered pest and disease detection across the row crops growers rely on most.'}
+          ${isBn ? 'ফাইটোগার্ড এআই কৃষকদের সর্বাধিক নির্ভরশীল ফসলের পাতার স্তরে দৃষ্টি এবং এআই-চালিত রোগ শনাক্তকরণ নিশ্চিত করে।' : 'PhytoGuard AI delivers leaf-level visibility and AI-powered crop disease detection across the row crops growers rely on most.'}
         </p>
       </section>
 
@@ -1190,13 +1475,6 @@ function flowCard(title, text, steps, options = {}) {
 }
 
 function howItWorksPage() {
-  const faqs = [
-    ['Which drones work with PhytoGuard AI?', 'PhytoGuard AI natively supports commercial off-the-shelf drones including DJI Mavic Air 2S, Mavic 2 Pro, Mavic 3 Enterprise, Mavic 3 Multispectral, and DJI Agras spraying platforms.'],
-    ['How high does the drone fly to detect pests at the leaf level?', 'Our automated waypoint patterns fly between 15 to 25 meters above the canopy, delivering 0.4 to 0.8 cm/pixel Ground Sample Distance (GSD) for sub-millimeter leaf diagnosis.'],
-    ['How often should I fly my drone over the fields?', 'We recommend flying every 7 to 14 days during critical growth, emergence, and flowering stages, or immediately following high-humidity spells to spot early fungal spores before they spread.'],
-    ['Can I export prescription maps directly to my sprayer?', 'Yes. PhytoGuard AI automatically converts detection findings into standard GeoTIFF, Shapefile, and ISO-XML prescription maps ready to load directly into modern tractor and sprayer controllers.'],
-  ];
-
   const flightIcon = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="9" opacity="0.25"/>
@@ -1214,11 +1492,11 @@ function howItWorksPage() {
     </svg>
   `;
 
-  const prescriptionIcon = `
+  const recommendationIcon = `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-      <line x1="8" y1="2" x2="8" y2="18"/>
-      <line x1="16" y1="6" x2="16" y2="22"/>
+      <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
+      <line x1="9" y1="21" x2="15" y2="21"/>
+      <path d="M10 9l2 2 4-4"/>
     </svg>
   `;
 
@@ -1271,14 +1549,14 @@ function howItWorksPage() {
           <span class="hiw-section-eyebrow">${isBn ? 'মূল প্রযুক্তি স্তর' : 'Core Architecture'}</span>
           <h2 class="hiw-section-title">${isBn ? 'তিনটি স্তরে মাঠ বুদ্ধিমান করে তোলা হয়' : 'Three layers of crop intelligence'}</h2>
           <p class="hiw-section-sub">
-            ${isBn ? 'ফ্লাইট পরিকল্পনা থেকে সুনির্দিষ্ট স্প্রে ম্যাপ — প্রতিটি পদক্ষেপ সর্বোচ্চ নির্ভুলতার জন্য অপ্টিমাইজড।' : 'From flight planning to variable-rate spray maps, each layer is purpose-built for speed and precision.'}
+            ${isBn ? 'ফ্লাইট পরিকল্পনা থেকে বুদ্ধিমান এআই সুপারিশ — প্রতিটি পদক্ষেপ সর্বোচ্চ নির্ভুলতার জন্য অপ্টিমাইজড।' : 'From flight planning to intelligent AI recommendations, each layer is purpose-built for speed and precision.'}
           </p>
         </div>
 
         <div class="hiw-flows-grid">
           ${flowCard(
             isBn ? 'স্বয়ংক্রিয় ড্রোন উড্ডয়ন' : 'Autonomous Flight',
-            isBn ? 'ফসলের প্রয়োজনের সাথে সামঞ্জস্য রেখে স্বয়ংক্রিয় ওয়েপয়েন্ট গ্রিডে ড্রোন পরিচালনা করুন।' : "Fly your drone in automated waypoint grids tuned to your crop's needs, like pest detection, stand count, or canopy coverage.",
+            isBn ? 'ফসলের প্রয়োজনের সাথে সামঞ্জস্য রেখে স্বয়ংক্রিয় ওয়েপয়েন্ট গ্রিডে ড্রোন পরিচালনা করুন।' : "Fly your drone in automated waypoint grids tuned to your crop's needs, like disease detection, stand count, or canopy coverage.",
             isBn ? ['প্যাটার্ন পরিকল্পনা', 'ফ্লাইট ও ছবি সংগ্রহ', 'উচ্চ রেজোলিউশন ফটো', 'ফ্লাইট আপলোড'] : ['Plan pattern', 'Fly & capture', 'High-res raw photos', 'Upload flight'],
             {
               icon: flightIcon,
@@ -1289,7 +1567,7 @@ function howItWorksPage() {
           )}
           ${flowCard(
             isBn ? 'পাতার স্তরে এআই স্ক্যান' : 'Leaf-Level AI Scan',
-            isBn ? 'গভীর নিউরাল নেটওয়ার্ক প্রতিটি উচ্চ রেজোলিউশন ছবি স্ক্যান করে রোগ ও স্ট্রেস ছড়িয়ে পড়ার আগেই চিহ্নিত করে।' : 'Deep neural networks inspect every high-resolution aerial photo down to the leaf, detecting pests, blight, and nutrient stress before they spread.',
+            isBn ? 'গভীর নিউরাল নেটওয়ার্ক প্রতিটি উচ্চ রেজোলিউশন ছবি স্ক্যান করে রোগ ও স্ট্রেস ছড়িয়ে পড়ার আগেই চিহ্নিত করে।' : 'Deep neural networks inspect every high-resolution aerial photo down to the leaf, detecting foliar diseases, blight, and nutrient stress before they spread.',
             isBn ? ['অর্থোমোসাইক স্টিচিং', 'এআই লিফ স্ক্যান', 'তীব্রতা মূল্যায়ন', 'ঝুঁকি সতর্কতা'] : ['Orthomosaic stitching', 'AI leaf scan', 'Severity scoring', 'Risk alerts'],
             {
               icon: leafAiIcon,
@@ -1299,14 +1577,14 @@ function howItWorksPage() {
             }
           )}
           ${flowCard(
-            isBn ? 'সুনির্দিষ্ট স্প্রে প্রেসক্রিপশন' : 'Variable-Rate Spraying',
-            isBn ? 'শনাক্তকরণ রিপোর্টকে সরাসরি পরিবর্তনশীল স্প্রে ম্যাপে রূপান্তর করে ড্রোন বা স্প্রেয়ারে এক্সপোর্ট করুন।' : 'Turn aerial detection reports directly into variable-rate prescription spray maps, exported to your sprayer so chemicals land only where needed.',
-            isBn ? ['ঝুঁকি সীমানা', 'প্রেসক্রিপশন ম্যাপ', 'স্প্রেয়ার এক্সপোর্ট', 'সুনির্দিষ্ট প্রয়োগ'] : ['Threat boundary', 'Prescription map', 'Sprayer export', 'Targeted treatment'],
+            isBn ? 'এআই সুপারিশ' : 'AI Recommendation',
+            isBn ? 'শনাক্তকৃত রোগ ও পাতার স্বাস্থ্য ডেটা থেকে স্বয়ংক্রিয় এআই চিকিৎসাপত্র, রাসায়নিক ও জৈব ডোজ এবং সুনির্দিষ্ট প্রতিকারমূলক পরিকল্পনা তৈরি করুন।' : 'Translate leaf-level disease detections into intelligent agronomic recommendations, optimal fungicide dosages, and precision treatment plans tailored to your specific crop.',
+            isBn ? ['রোগ নির্ণয়', 'এআই প্রেসক্রিপশন', 'সুনির্দিষ্ট প্রয়োগ', 'পুনরুদ্ধার ট্র্যাকিং'] : ['Pathogen diagnosis', 'Prescription advisory', 'Targeted treatment', 'Recovery tracking'],
             {
-              icon: prescriptionIcon,
-              eyebrow: isBn ? 'যথার্থ কৃষি বিজ্ঞান' : 'Precision Agronomy',
-              tag: isBn ? 'ভেরিয়েবল রেট · আইএসও-এক্সএমএল প্রস্তুত' : 'Variable-Rate · ISO-XML Ready',
-              accent: '#c9771e'
+              icon: recommendationIcon,
+              eyebrow: isBn ? 'স্মার্ট কৃষি বুদ্ধিমত্তা' : 'Agronomic Intelligence',
+              tag: isBn ? 'কার্যকর পরামর্শ · সুনির্দিষ্ট প্রেসক্রিপশন' : 'Actionable Advisory · Targeted Rx',
+              accent: '#d97706'
             }
           )}
         </div>
@@ -1344,9 +1622,9 @@ function howItWorksPage() {
       <section class="hiw-delivery-section">
         <div class="hiw-delivery-grid">
           ${[
-            'Flight Planning|Automated waypoint flight grids and altitude control',
-            'Leaf-Level AI|Sub-millimeter pest, disease, and canopy diagnosis',
-            'Prescription Maps|Variable-rate spray maps ready for sprayers and drones'
+            isBn ? 'ফ্লাইট পরিকল্পনা|স্বয়ংক্রিয় ওয়েপয়েন্ট ফ্লাইট গ্রিড ও উচ্চতা নিয়ন্ত্রণ' : 'Flight Planning|Automated waypoint flight grids and altitude control',
+            isBn ? 'পাতার স্তরে এআই|সাব-মিলিমিটার প্যাথোজেন, রোগ এবং ক্যানোপি নির্ণয়' : 'Leaf-Level AI|Sub-millimeter foliar disease, pathogen, and canopy diagnosis',
+            isBn ? 'এআই সুপারিশ|সুনির্দিষ্ট চিকিৎসা পরিকল্পনা ও প্রেসক্রিপশন নির্দেশিকা' : 'AI Recommendations|Actionable treatment plans and targeted prescription maps'
           ].map((item, idx) => {
             const [name, text] = item.split('|');
             return `
@@ -1357,57 +1635,6 @@ function howItWorksPage() {
               </article>
             `;
           }).join('')}
-        </div>
-      </section>
-
-      <section class="hiw-ecosystem-section">
-        <div class="hiw-ecosystem-card">
-          <div class="hiw-ecosystem-content">
-            <span class="hiw-section-tag-inline">Hardware Agnostic</span>
-            <h2 class="hiw-ecosystem-title">Compatible with the aircraft you already own</h2>
-            <p class="hiw-ecosystem-text">No proprietary flight hardware lock-in. PhytoGuard AI natively integrates with standard and multispectral drone platforms.</p>
-            <div class="hiw-drone-pills">
-              <span class="drone-pill-item">DJI Mavic 3 Multispectral</span>
-              <span class="drone-pill-item">DJI Mavic 3 Enterprise</span>
-              <span class="drone-pill-item">DJI Mavic 3 Mini Pro</span>
-              <span class="drone-pill-item">DJI Mavic Air 2S &amp; Mavic 2 Pro</span>
-              <span class="drone-pill-item">DJI Agras Series</span>
-            </div>
-          </div>
-          <div class="hiw-apps-card">
-            <h3>Automated Flight Planners</h3>
-            <p>Download our automated flight pattern apps to capture field-grade imagery hands-free.</p>
-            <div class="hiw-app-list">
-              <div class="hiw-app-box">
-                <strong>PhytoGuard Sky</strong>
-                <span>For DJI Mavic Air 2S &amp; Mavic 2 Pro</span>
-              </div>
-              <div class="hiw-app-box">
-                <strong>PhytoGuard Sky+</strong>
-                <span>For DJI Mavic 3 Multispectral &amp; Enterprise</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="hiw-faq-section">
-        <div class="hiw-section-heading centered">
-          <span class="hiw-section-eyebrow">Flight questions answered</span>
-          <h2 class="hiw-section-title">Common questions</h2>
-        </div>
-        <div class="hiw-faq-list">
-          ${faqs.map(([question, answer]) => `
-            <details class="hiw-faq-card">
-              <summary class="hiw-faq-summary">
-                <span>${question}</span>
-                <span class="hiw-faq-plus" aria-hidden="true">+</span>
-              </summary>
-              <div class="hiw-faq-answer">
-                <p>${answer}</p>
-              </div>
-            </details>
-          `).join('')}
         </div>
       </section>
 
@@ -1464,41 +1691,6 @@ function getTranslatedPlan(plan) {
         'ব্যবস্থা গ্রহণের জন্য প্রেসক্রিপশন ম্যাপ'
       ],
       btn: 'নেটওয়ার্ক প্ল্যান দেখুন'
-    },
-    'Service Providers': {
-      label: 'ড্রোন সার্ভিস প্রোভাইডার',
-      title: 'ক্রপ ইন্টেলিজেন্স সার্ভিসেস',
-      text: 'আপনার বর্তমান ড্রোন থেকেই তৈরি করুন নতুন আয়ের উৎস।',
-      pricing: 'সার্ভিসের পরিধি অনুযায়ী কাস্টম মূল্য',
-      items: [
-        'ড্রোন ক্যাপচার ওয়ার্কফ্লো',
-        'মাল্টিস্পেকট্রাল ড্রোন ইমেজ',
-        'এআই স্কাউটিং রিপোর্ট',
-        'রোগ ও বালাই শনাক্তকরণ',
-        'জিপিএস ট্যাগযুক্ত রিপোর্ট',
-        'রোগের তীব্রতা ম্যাপ',
-        'প্রেসক্রিপশন ম্যাপ',
-        'গ্রাহক উপযোগী মাঠ রিপোর্ট',
-        'অংশীদার প্রশিক্ষণ ও অনবোর্ডিং'
-      ],
-      btn: 'সার্ভিস প্ল্যান দেখুন'
-    },
-    'Insurance': {
-      label: 'কৃষি বীমা',
-      title: 'ডিজিটাল ক্ষতি মূল্যায়ন',
-      text: 'দ্রুত এবং নির্ভুল ক্ষতি মূল্যায়নের জন্য ড্রোনভিত্তিক নিরপেক্ষ প্রমাণ।',
-      pricing: 'অ্যাসেসমেন্টের পরিধি অনুযায়ী কাস্টম মূল্য',
-      items: [
-        'ড্রোনভিত্তিক মাঠ ক্ষতি মূল্যায়ন',
-        'অর্থোফটো ফিল্ড ম্যাপ',
-        'জিও-রেফারেন্সড প্রমাণপত্র',
-        'ক্ষতিগ্রস্ত এলাকার সঠিক পরিমাপ',
-        'ক্ষতির শতাংশ হিসাব',
-        'তীব্রতাভিত্তিক ডকুমেন্টেশন',
-        'পূর্ব ও পরবর্তী মাঠ তুলনা',
-        'বীমা অ্যাসেসমেন্ট রিপোর্ট'
-      ],
-      btn: 'বীমা সমাধান দেখুন'
     }
   };
   return bnPlans[plan.label] ? { ...plan, ...bnPlans[plan.label] } : plan;
@@ -1546,9 +1738,9 @@ function plansPage() {
     <div class="plans-page-wrap">
       <section class="plans-header-section">
         <span class="plans-eyebrow">${isBn ? 'প্যাকেজ ও মূল্য' : 'Plans'}</span>
-        <h1 class="plans-main-title">${isBn ? 'ফসল সরবরাহ ব্যবস্থার প্রতিটি স্তরের জন্য প্রস্তুত' : 'Built for every link in the crop value chain'}</h1>
+        <h1 class="plans-main-title">${isBn ? 'ফসল সুরক্ষার জন্য আপনার উপযুক্ত প্যাকেজ' : 'Plans tailored for precision crop protection'}</h1>
         <p class="plans-main-subtitle">
-          ${isBn ? 'আপনার কাজের ধরণের সাথে মিলে এমন প্যাকেজ বেছে নিন — আপনি চাষী, প্রক্রিয়াজাতকারী, পরামর্শক বা বীমাকারী যাই হোন না কেন।' : 'Pick the plan that matches how you work, whether you grow, process, advise, or insure. Every plan is powered by the same leaf-level AI crop protection platform.'}
+          ${isBn ? 'আপনার কাজের ধরণের সাথে মিলে এমন প্যাকেজ বেছে নিন — আপনি একক খামারি বা বৃহৎ কৃষি সমবায় প্রতিষ্ঠান যাই হোন না কেন।' : 'Pick the plan that matches how you work, whether you manage your own fields or oversee a network of growers. Every plan is powered by the same leaf-level AI crop protection platform.'}
         </p>
       </section>
 
@@ -1573,6 +1765,834 @@ function plansPage() {
     </div>
   `;
 }
+
+function getCropEmoji(crop) {
+  const c = (crop || '').toLowerCase();
+  if (c.includes('tomato')) return '🍅';
+  if (c.includes('potato')) return '🥔';
+  if (c.includes('wheat')) return '🌾';
+  if (c.includes('corn') || c.includes('maize')) return '🌽';
+  if (c.includes('onion')) return '🧅';
+  if (c.includes('rice') || c.includes('paddy')) return '🍚';
+  if (c.includes('cucumber')) return '🥒';
+  if (c.includes('soybean')) return '🌱';
+  if (c.includes('grape')) return '🍇';
+  if (c.includes('sugar')) return '🎋';
+  return '🌿';
+}
+
+function renderFarmerSmartCard(card, isBn) {
+  if (!card) return '';
+  const emoji = getCropEmoji(card.primaryCrop);
+  return `
+    <div class="krishi-smart-card" id="featured-smart-card">
+      <div class="card-chip-ambient" aria-hidden="true"></div>
+      
+      <!-- Official Header -->
+      <div class="smart-card-topbar">
+        <div class="smart-card-crest">
+          <svg class="gov-crest-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" fill="#006a4e" stroke="#d4af37" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="4.5" fill="#f42a41"/>
+            <path d="M6 16c2-1 4-1 6 0s4 1 6 0" stroke="#f5d77f" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <div class="crest-text">
+            <span class="crest-title">${t('farmersCard.govtHeader')}</span>
+            <span class="crest-sub">${t('farmersCard.ministryHeader')}</span>
+          </div>
+        </div>
+        <div class="smart-card-nfc" aria-hidden="true" title="Contactless NFC Chip Enabled">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M7 6a10 10 0 0 1 0 12"/>
+            <path d="M11 8a6 6 0 0 1 0 8"/>
+            <path d="M15 10a2 2 0 0 1 0 4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Chip & Badge Row -->
+      <div class="smart-card-hardware-row">
+        <div class="emv-chip-wrap" title="Integrated Agricultural EMV Microchip">
+          <svg class="emv-chip" viewBox="0 0 50 38" width="46" height="34" fill="none" aria-hidden="true">
+            <rect width="50" height="38" rx="6" fill="url(#chip-gold)" stroke="#8d6b1d" stroke-width="1.2"/>
+            <rect x="15" y="0" width="20" height="38" fill="none" stroke="#7a5c19" stroke-width="0.8"/>
+            <line x1="0" y1="19" x2="50" y2="19" stroke="#7a5c19" stroke-width="0.8"/>
+            <line x1="15" y1="9" x2="35" y2="9" stroke="#7a5c19" stroke-width="0.8"/>
+            <line x1="15" y1="29" x2="35" y2="29" stroke="#7a5c19" stroke-width="0.8"/>
+            <circle cx="25" cy="19" r="4" fill="#a47d24" stroke="#684e15" stroke-width="0.8"/>
+            <defs>
+              <linearGradient id="chip-gold" x1="0" y1="0" x2="50" y2="38" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f5d77f"/>
+                <stop offset="0.5" stop-color="#d4af37"/>
+                <stop offset="1" stop-color="#aa820a"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="smart-card-id-pill">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span id="preview-status">${card.status || t('farmersCard.statusVerified')}</span>
+        </div>
+      </div>
+
+      <!-- Card Number (Embossed Monospace) -->
+      <div class="smart-card-number-box">
+        <div class="smart-card-number" id="preview-card-number">${card.cardNumber}</div>
+      </div>
+
+      <!-- Farmer Holder Details -->
+      <div class="smart-card-body">
+        <div class="smart-card-main-info">
+          <div class="smart-field-group">
+            <label class="smart-field-label">${t('farmersCard.holderName')}</label>
+            <div class="smart-holder-name" id="preview-farmer-name">${card.farmerName}</div>
+          </div>
+          <div class="smart-meta-grid">
+            <div class="smart-meta-item">
+              <label class="smart-field-label">${t('farmersCard.district')}</label>
+              <div class="smart-meta-value" id="preview-location">${card.district}${card.upazila ? ' • ' + card.upazila : ''}</div>
+            </div>
+            <div class="smart-meta-item">
+              <label class="smart-field-label">${t('farmersCard.fieldSize')}</label>
+              <div class="smart-meta-value field-acreage-value" id="preview-field-size">${card.fieldSize}</div>
+            </div>
+            <div class="smart-meta-item">
+              <label class="smart-field-label">${t('farmersCard.primaryCrop')}</label>
+              <div class="smart-meta-value crop-highlight-value" id="preview-crop">${emoji} ${card.primaryCrop}</div>
+            </div>
+            <div class="smart-meta-item">
+              <label class="smart-field-label">${t('farmersCard.category')}</label>
+              <div class="smart-meta-value" id="preview-category">${card.category || 'Commercial Grower'}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="smart-card-qr-section">
+          <div class="smart-qr-box" title="Drone GPS Geofence Sync QR">
+            <svg class="qr-code-svg" viewBox="0 0 80 80" width="68" height="68" fill="none" aria-hidden="true">
+              <rect width="80" height="80" rx="6" fill="#ffffff"/>
+              <rect x="8" y="8" width="22" height="22" rx="3" fill="#111827"/>
+              <rect x="12" y="12" width="14" height="14" rx="1.5" fill="#ffffff"/>
+              <rect x="15" y="15" width="8" height="8" rx="1" fill="#111827"/>
+              <rect x="50" y="8" width="22" height="22" rx="3" fill="#111827"/>
+              <rect x="54" y="12" width="14" height="14" rx="1.5" fill="#ffffff"/>
+              <rect x="57" y="15" width="8" height="8" rx="1" fill="#111827"/>
+              <rect x="8" y="50" width="22" height="22" rx="3" fill="#111827"/>
+              <rect x="12" y="54" width="14" height="14" rx="1.5" fill="#ffffff"/>
+              <rect x="15" y="57" width="8" height="8" rx="1" fill="#111827"/>
+              <rect x="36" y="10" width="6" height="6" fill="#111827"/>
+              <rect x="36" y="24" width="6" height="6" fill="#111827"/>
+              <rect x="36" y="38" width="6" height="6" fill="#111827"/>
+              <rect x="36" y="52" width="6" height="6" fill="#111827"/>
+              <rect x="36" y="66" width="6" height="6" fill="#111827"/>
+              <rect x="50" y="38" width="6" height="6" fill="#111827"/>
+              <rect x="64" y="38" width="6" height="6" fill="#111827"/>
+              <rect x="50" y="52" width="12" height="6" fill="#111827"/>
+              <rect x="64" y="60" width="6" height="12" fill="#111827"/>
+              <rect x="18" y="36" width="10" height="6" fill="#111827"/>
+            </svg>
+          </div>
+          <span class="qr-label">${isBn ? 'আরটিকে ড্রোন কোড' : 'RTK Drone Sync'}</span>
+        </div>
+      </div>
+
+      <!-- Bottom Security & Laser Barcode -->
+      <div class="smart-card-footer">
+        <div class="smart-security-seal">
+          <span class="security-dot"></span>
+          <span>PHYTOGUARD AI • RTK AUTONOMOUS SCOUTING SYNCED</span>
+        </div>
+        <div class="smart-barcode-wrap" aria-hidden="true">
+          <svg class="barcode-svg" viewBox="0 0 200 24" width="140" height="18" fill="currentColor">
+            <rect x="0" y="0" width="3" height="24"/>
+            <rect x="5" y="0" width="2" height="24"/>
+            <rect x="10" y="0" width="4" height="24"/>
+            <rect x="17" y="0" width="1" height="24"/>
+            <rect x="21" y="0" width="3" height="24"/>
+            <rect x="27" y="0" width="5" height="24"/>
+            <rect x="35" y="0" width="2" height="24"/>
+            <rect x="40" y="0" width="3" height="24"/>
+            <rect x="46" y="0" width="4" height="24"/>
+            <rect x="53" y="0" width="2" height="24"/>
+            <rect x="58" y="0" width="5" height="24"/>
+            <rect x="66" y="0" width="1" height="24"/>
+            <rect x="70" y="0" width="4" height="24"/>
+            <rect x="77" y="0" width="2" height="24"/>
+            <rect x="82" y="0" width="3" height="24"/>
+            <rect x="88" y="0" width="6" height="24"/>
+            <rect x="97" y="0" width="2" height="24"/>
+            <rect x="102" y="0" width="3" height="24"/>
+            <rect x="108" y="0" width="4" height="24"/>
+            <rect x="115" y="0" width="2" height="24"/>
+            <rect x="120" y="0" width="5" height="24"/>
+            <rect x="128" y="0" width="2" height="24"/>
+            <rect x="133" y="0" width="3" height="24"/>
+            <rect x="139" y="0" width="4" height="24"/>
+            <rect x="146" y="0" width="1" height="24"/>
+            <rect x="150" y="0" width="4" height="24"/>
+            <rect x="157" y="0" width="2" height="24"/>
+            <rect x="162" y="0" width="3" height="24"/>
+            <rect x="168" y="0" width="5" height="24"/>
+            <rect x="176" y="0" width="2" height="24"/>
+            <rect x="181" y="0" width="4" height="24"/>
+            <rect x="188" y="0" width="2" height="24"/>
+            <rect x="193" y="0" width="3" height="24"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFarmerGridItem(card, isBn, isActive = false) {
+  const initial = (card.farmerName || 'F').charAt(0).toUpperCase();
+  const emoji = getCropEmoji(card.primaryCrop);
+  return `
+    <article class="farmer-grid-card ${isActive ? 'active-preview-card' : ''}" data-farmer-id="${card.id}">
+      <div class="farmer-grid-card-header">
+        <div class="farmer-avatar-badge">${initial}</div>
+        <div class="farmer-name-meta">
+          <h3 class="farmer-name-title">${card.farmerName}</h3>
+          <span class="farmer-id-badge">${card.cardNumber}</span>
+        </div>
+        <span class="farmer-verified-icon" title="${isBn ? 'যাচাইকৃত সক্রিয়' : 'Verified Active'}">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="#2f6f43" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="farmer-grid-details">
+        <div class="farmer-detail-pill" title="${t('farmersCard.district')}">
+          <span class="pill-icon">📍</span>
+          <span>${card.district}${card.upazila ? ', ' + card.upazila : ''}</span>
+        </div>
+        <div class="farmer-detail-pill" title="${t('farmersCard.fieldSize')}">
+          <span class="pill-icon">📐</span>
+          <span>${card.fieldSize}</span>
+        </div>
+        <div class="farmer-detail-pill crop-pill" title="${t('farmersCard.primaryCrop')}">
+          <span class="pill-icon">${emoji}</span>
+          <span>${card.primaryCrop}</span>
+        </div>
+        <div class="farmer-detail-pill" title="${t('farmersCard.category')}">
+          <span class="pill-icon">🏷️</span>
+          <span>${card.category || 'Commercial Grower'}</span>
+        </div>
+      </div>
+
+      <div class="farmer-grid-footer">
+        <button type="button" class="btn-select-farmer-card" data-select-card-id="${card.id}" aria-label="${t('farmersCard.viewDetails')} for ${card.farmerName}">
+          ${t('farmersCard.viewDetails')} &uarr;
+        </button>
+        <button type="button" class="btn-delete-farmer-card" data-delete-card-id="${card.id}" title="${t('farmersCard.deleteCard')}" aria-label="${t('farmersCard.deleteCard')} for ${card.farmerName}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function farmersCardPage() {
+  const isBn = getLang() === 'bn';
+  const currentUser = getCurrentUser();
+  const cards = getFarmerCardsForUser(currentUser);
+  const activeCard = cards[0] || (currentUser ? {
+    farmerName: currentUser.name || currentUser.firstName || 'Ador',
+    cardNumber: 'KRC-BD-2026-PENDING',
+    district: 'Bogura',
+    upazila: 'Santhahar',
+    fieldSize: '0 Hectares',
+    primaryCrop: 'Tomatoes',
+    category: 'Commercial Grower',
+    status: isBn ? 'অনিবন্ধিত' : 'Pending Registration'
+  } : {
+    farmerName: 'Ador',
+    cardNumber: 'KRC-BD-2026-88017',
+    district: 'Bogura',
+    upazila: 'Santhahar',
+    fieldSize: '40 Hectares',
+    primaryCrop: 'Tomatoes',
+    category: 'Commercial Grower',
+    status: 'Verified Active'
+  });
+
+  const totalHectares = cards.reduce((acc, c) => {
+    const num = parseFloat(c.fieldSize);
+    return isNaN(num) ? acc : acc + num;
+  }, 0);
+
+  const uniqueDistricts = Array.from(new Set(cards.map(c => c.district).filter(Boolean)));
+  const uniqueCrops = Array.from(new Set(cards.map(c => c.primaryCrop).filter(Boolean)));
+
+  return `
+    <div class="farmers-card-page-wrap">
+      <!-- Page Hero -->
+      <section class="farmers-hero-section">
+        <div class="farmers-hero-header">
+          <div class="farmers-hero-text">
+            <span class="farmers-eyebrow">${t('farmersCard.badge')}</span>
+            <h1 class="farmers-main-title">${t('farmersCard.title')}</h1>
+            <p class="farmers-main-subtitle">${t('farmersCard.subtitle')}</p>
+          </div>
+          <div class="farmers-hero-actions">
+            <button type="button" class="btn-hero-add-card" id="open-add-card-btn-hero">
+              <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+                <line x1="10" y1="4" x2="10" y2="16"/>
+                <line x1="4" y1="10" x2="16" y2="10"/>
+              </svg>
+              <span>${t('farmersCard.addCardBtn')}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Agri Registry Stats Banner -->
+        <div class="farmers-stats-strip">
+          <div class="farmer-stat-card">
+            <span class="stat-icon-wrap">👨‍🌾</span>
+            <div>
+              <div class="stat-number" id="stats-total-farmers">${formatNumber(cards.length)}</div>
+              <div class="stat-label">${t('farmersCard.totalRegistered')}</div>
+            </div>
+          </div>
+          <div class="farmer-stat-card">
+            <span class="stat-icon-wrap">🌾</span>
+            <div>
+              <div class="stat-number" id="stats-total-acreage">${formatNumber(totalHectares)} <small>${isBn ? 'হেক্টর' : 'Ha'}</small></div>
+              <div class="stat-label">${t('farmersCard.totalArea')}</div>
+            </div>
+          </div>
+          <div class="farmer-stat-card">
+            <span class="stat-icon-wrap">💳</span>
+            <div>
+              <div class="stat-number" id="stats-active-cards">${cards.length > 0 ? '100%' : '0%'}</div>
+              <div class="stat-label">${t('farmersCard.activeCards')}</div>
+            </div>
+          </div>
+          <div class="farmer-stat-card">
+            <span class="stat-icon-wrap">🛰️</span>
+            <div>
+              <div class="stat-number">RTK GPS</div>
+              <div class="stat-label">${isBn ? 'ড্রোন ক্লাউড সিনক্রোনাইজড' : 'Scouting Synced'}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Digital Krishi Card Interactive Showcase -->
+      <section class="farmers-card-showcase-section">
+        <div class="section-title-wrap">
+          <h2 class="section-heading">${t('farmersCard.cardPreviewTitle')}</h2>
+          <p class="section-sub">${t('farmersCard.cardPreviewSub')}</p>
+        </div>
+
+        <div class="showcase-grid-layout">
+          <!-- Left: Digital Smart Card -->
+          <div class="featured-card-col">
+            ${renderFarmerSmartCard(activeCard, isBn)}
+          </div>
+
+          <!-- Right: Synchronized Drone Telemetry Box -->
+          <div class="card-telemetry-col">
+            <div class="telemetry-box">
+              <div class="telemetry-header">
+                <div class="telemetry-pulse-indicator">
+                  <span class="pulse-ring"></span>
+                  <span class="pulse-core"></span>
+                </div>
+                <div>
+                  <h3 class="telemetry-title">${isBn ? 'ড্রোন স্কাউটিং ও টেলিমেট্রি লিংক' : 'Drone Scouting & Field Link'}</h3>
+                  <p class="telemetry-sub">${isBn ? 'সক্রিয় আরটিকে স্যাটেলাইট ও ড্রোন ফ্লাইট লিংক' : 'Active RTK Satellites & Hyperspectral Payload'}</p>
+                </div>
+              </div>
+
+              <div class="telemetry-specs-list">
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'কার্ডধারী চাষী' : 'Cardholder'}</span>
+                  <span class="spec-val highlight-val" id="telemetry-farmer-name">${activeCard.farmerName}</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'ক্যাপচার ড্রোন' : 'Surveillance Drone'}</span>
+                  <span class="spec-val">DJI Matrice 350 RTK</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'সেন্সর পেলোড' : 'Sensor Payload'}</span>
+                  <span class="spec-val">Multispectral (NDVI / RedEdge)</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'জিআইএস সংযোগ' : 'GIS Boundary Sync'}</span>
+                  <span class="spec-val text-success">Active &bull; Latch OK</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'এনআইডি রেফারেন্স' : 'National ID'}</span>
+                  <span class="spec-val" id="telemetry-farmer-nid">${activeCard.nid || '1992-1082-9481-02'}</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-name">${isBn ? 'যোগাযোগের ফোন' : 'Contact Mobile'}</span>
+                  <span class="spec-val" id="telemetry-farmer-phone">${activeCard.phone || '+880 1700-000000'}</span>
+                </div>
+              </div>
+
+              <div class="telemetry-footer-action">
+                <button type="button" class="btn-panel-add-card" id="open-add-card-btn-panel">
+                  <span>+ ${t('farmersCard.addCardBtn')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Registered Farmers Directory -->
+      <section class="farmers-directory-section">
+        <div class="directory-header-row">
+          <div>
+            <h2 class="section-heading">${t('farmersCard.directoryTitle')}</h2>
+            <p class="section-sub">${t('farmersCard.directorySub')}</p>
+          </div>
+          <div class="directory-count-badge">
+            <span id="directory-visible-count">${formatNumber(cards.length)}</span> ${isBn ? 'জন চাষী' : 'Farmer Card' + (cards.length === 1 ? '' : 's')}
+          </div>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="directory-controls-bar">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.5"/>
+              <line x1="12.5" y1="12.5" x2="17" y2="17"/>
+            </svg>
+            <input type="text" id="farmer-search-input" placeholder="${t('farmersCard.searchPlaceholder')}" aria-label="${t('farmersCard.searchPlaceholder')}" />
+          </div>
+
+          <div class="filter-dropdown-wrap">
+            <select id="farmer-district-filter" aria-label="${t('farmersCard.filterAllDistricts')}">
+              <option value="">${t('farmersCard.filterAllDistricts')}</option>
+              ${uniqueDistricts.map(d => `<option value="${d}">${d}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="filter-dropdown-wrap">
+            <select id="farmer-crop-filter" aria-label="${t('farmersCard.filterAllCrops')}">
+              <option value="">${t('farmersCard.filterAllCrops')}</option>
+              ${uniqueCrops.map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <!-- Farmer Cards Grid -->
+        <div class="farmer-cards-grid" id="farmer-cards-grid">
+          ${cards.map((c, idx) => renderFarmerGridItem(c, isBn, idx === 0)).join('')}
+        </div>
+
+        <!-- Empty State -->
+        <div class="farmer-empty-state" id="farmer-cards-empty" style="${cards.length === 0 ? 'display: block;' : 'display: none;'}">
+          <div class="empty-icon">💳</div>
+          <h3 class="empty-title">${cards.length === 0 ? t('farmersCard.noCardsUser') : t('farmersCard.noResults')}</h3>
+          <p class="empty-desc">${cards.length === 0 ? t('farmersCard.noCardsUserHint') : t('farmersCard.noResultsHint')}</p>
+          ${cards.length === 0 ? `<button type="button" class="btn-hero-add-card" id="empty-add-card-btn" style="margin-top: 1rem;"><span>+ ${t('farmersCard.addCardBtn')}</span></button>` : ''}
+        </div>
+      </section>
+
+      <!-- Register New Farmer Card Modal Dialog -->
+      <div class="farmer-modal-backdrop" id="farmer-card-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="farmer-modal-title">
+        <div class="farmer-modal-dialog">
+          <div class="farmer-modal-header">
+            <div>
+              <h2 id="farmer-modal-title" class="farmer-modal-title">${t('farmersCard.modalTitle')}</h2>
+              <p class="farmer-modal-subtitle">${t('farmersCard.modalSubtitle')}</p>
+            </div>
+            <button type="button" class="farmer-modal-close-btn" id="farmer-modal-close" aria-label="${t('common.close')}">&times;</button>
+          </div>
+
+          <form id="add-farmer-card-form" class="farmer-card-form" novalidate>
+            <div id="farmer-form-alert" class="farmer-form-alert" style="display: none;" role="alert"></div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="farmer-name-input">${t('farmersCard.holderName')} <span class="req-star">*</span></label>
+                <input type="text" id="farmer-name-input" class="form-control" placeholder="${t('farmersCard.namePlaceholder')}" required />
+              </div>
+              <div class="form-group">
+                <div class="label-with-action">
+                  <label for="farmer-card-number-input">${t('farmersCard.cardNumber')} <span class="req-star">*</span></label>
+                  <button type="button" id="generate-card-id-btn" class="text-action-btn">${isBn ? 'স্বয়ংক্রিয় আইডি' : 'Auto Generate'}</button>
+                </div>
+                <input type="text" id="farmer-card-number-input" class="form-control" placeholder="${t('farmersCard.cardPlaceholder')}" required />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="farmer-district-input">${t('farmersCard.district')} <span class="req-star">*</span></label>
+                <input type="text" id="farmer-district-input" class="form-control" placeholder="${t('farmersCard.districtPlaceholder')}" required />
+              </div>
+              <div class="form-group">
+                <label for="farmer-upazila-input">${t('farmersCard.upazila')}</label>
+                <input type="text" id="farmer-upazila-input" class="form-control" placeholder="${t('farmersCard.upazilaPlaceholder')}" />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="farmer-field-size-input">${t('farmersCard.fieldSize')} <span class="req-star">*</span></label>
+                <input type="text" id="farmer-field-size-input" class="form-control" placeholder="${t('farmersCard.fieldSizePlaceholder')}" required />
+              </div>
+              <div class="form-group">
+                <label for="farmer-crop-select">${t('farmersCard.primaryCrop')} <span class="req-star">*</span></label>
+                <select id="farmer-crop-select" class="form-control" required>
+                  <option value="Tomatoes">Tomatoes (টমেটো)</option>
+                  <option value="Potatoes">Potatoes (আলু)</option>
+                  <option value="Wheat">Wheat (গম)</option>
+                  <option value="Corn">Corn / Maize (ভুট্টা)</option>
+                  <option value="Onions">Onions (পেঁয়াজ)</option>
+                  <option value="Rice">Rice (ধান)</option>
+                  <option value="Cucumbers">Cucumbers (শসা)</option>
+                  <option value="Soybeans">Soybeans (সয়াবিন)</option>
+                  <option value="Grapevines">Grapevines (আঙুর)</option>
+                  <option value="Sugarcane">Sugarcane (আখ)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label for="farmer-phone-input">${t('farmersCard.phone')}</label>
+                <input type="tel" id="farmer-phone-input" class="form-control" placeholder="${t('farmersCard.phonePlaceholder')}" />
+              </div>
+              <div class="form-group">
+                <label for="farmer-nid-input">${t('farmersCard.nid')}</label>
+                <input type="text" id="farmer-nid-input" class="form-control" placeholder="${t('farmersCard.nidPlaceholder')}" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="farmer-category-select">${t('farmersCard.category')}</label>
+              <select id="farmer-category-select" class="form-control">
+                <option value="Commercial Grower">${t('farmersCard.catCommercial')}</option>
+                <option value="Smallholder Farmer">${t('farmersCard.catSmallholder')}</option>
+                <option value="Agricultural Cooperative">${t('farmersCard.catCooperative')}</option>
+                <option value="Seed Multiplier">${t('farmersCard.catSeed')}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="farmer-notes-input">${t('farmersCard.notes')}</label>
+              <textarea id="farmer-notes-input" class="form-control" rows="2" placeholder="${t('farmersCard.notesPlaceholder')}"></textarea>
+            </div>
+
+            <div class="farmer-modal-actions">
+              <button type="button" class="btn-modal-cancel" id="cancel-farmer-modal">${t('common.cancel')}</button>
+              <button type="submit" class="btn-modal-submit" id="save-farmer-card-btn">${isBn ? 'কার্ড সংরক্ষণ ও সক্রিয় করুন' : 'Register & Activate Card'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setupFarmersCardEvents() {
+  const modal = document.querySelector('#farmer-card-modal');
+  const openBtnHero = document.querySelector('#open-add-card-btn-hero');
+  const openBtnPanel = document.querySelector('#open-add-card-btn-panel');
+  const emptyAddBtn = document.querySelector('#empty-add-card-btn');
+  const closeBtn = document.querySelector('#farmer-modal-close');
+  const cancelBtn = document.querySelector('#cancel-farmer-modal');
+  const genIdBtn = document.querySelector('#generate-card-id-btn');
+  const form = document.querySelector('#add-farmer-card-form');
+  const alertBox = document.querySelector('#farmer-form-alert');
+  const grid = document.querySelector('#farmer-cards-grid');
+  const emptyState = document.querySelector('#farmer-cards-empty');
+  const searchInput = document.querySelector('#farmer-search-input');
+  const districtFilter = document.querySelector('#farmer-district-filter');
+  const cropFilter = document.querySelector('#farmer-crop-filter');
+  const countBadge = document.querySelector('#directory-visible-count');
+  const isBn = getLang() === 'bn';
+
+  function openModal() {
+    if (!modal) return;
+    modal.style.display = 'flex';
+    if (alertBox) alertBox.style.display = 'none';
+    const currentUser = getCurrentUser();
+    const nameInput = document.querySelector('#farmer-name-input');
+    const phoneInput = document.querySelector('#farmer-phone-input');
+    if (currentUser) {
+      if (nameInput && !nameInput.value) {
+        nameInput.value = currentUser.name || `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+      }
+      if (phoneInput && !phoneInput.value && currentUser.phone) {
+        phoneInput.value = currentUser.phone;
+      }
+    }
+    if (nameInput) setTimeout(() => nameInput.focus(), 100);
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.style.display = 'none';
+    if (form) form.reset();
+  }
+
+  if (openBtnHero) openBtnHero.addEventListener('click', openModal);
+  if (openBtnPanel) openBtnPanel.addEventListener('click', openModal);
+  if (emptyAddBtn) emptyAddBtn.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal && modal.style.display !== 'none') {
+      closeModal();
+    }
+  });
+
+  if (genIdBtn) {
+    genIdBtn.addEventListener('click', () => {
+      const cardNumInput = document.querySelector('#farmer-card-number-input');
+      if (cardNumInput) {
+        const randomNum = Math.floor(10000 + Math.random() * 90000);
+        cardNumInput.value = `KRC-BD-2026-${randomNum}`;
+      }
+    });
+  }
+
+  // Update Featured Card display
+  function updateFeaturedPreview(card) {
+    if (!card) return;
+    const nameEl = document.querySelector('#preview-farmer-name');
+    const cardEl = document.querySelector('#preview-card-number');
+    const locEl = document.querySelector('#preview-location');
+    const sizeEl = document.querySelector('#preview-field-size');
+    const cropEl = document.querySelector('#preview-crop');
+    const catEl = document.querySelector('#preview-category');
+    const statusEl = document.querySelector('#preview-status');
+    const telName = document.querySelector('#telemetry-farmer-name');
+    const telNid = document.querySelector('#telemetry-farmer-nid');
+    const telPhone = document.querySelector('#telemetry-farmer-phone');
+
+    const emoji = getCropEmoji(card.primaryCrop);
+
+    if (nameEl) nameEl.textContent = card.farmerName;
+    if (cardEl) cardEl.textContent = card.cardNumber;
+    if (locEl) locEl.textContent = `${card.district}${card.upazila ? ' • ' + card.upazila : ''}`;
+    if (sizeEl) sizeEl.textContent = card.fieldSize;
+    if (cropEl) cropEl.textContent = `${emoji} ${card.primaryCrop}`;
+    if (catEl) catEl.textContent = card.category || 'Commercial Grower';
+    if (statusEl) statusEl.textContent = card.status || t('farmersCard.statusVerified');
+    if (telName) telName.textContent = card.farmerName;
+    if (telNid) telNid.textContent = card.nid || 'N/A';
+    if (telPhone) telPhone.textContent = card.phone || 'N/A';
+
+    // Highlight active card in grid
+    document.querySelectorAll('.farmer-grid-card').forEach(el => {
+      if (el.dataset.farmerId === card.id) {
+        el.classList.add('active-preview-card');
+      } else {
+        el.classList.remove('active-preview-card');
+      }
+    });
+  }
+
+  // Re-render directory cards
+  function refreshCardsGrid(selectNewId = null) {
+    const currentUser = getCurrentUser();
+    const cards = getFarmerCardsForUser(currentUser);
+    if (grid) {
+      grid.innerHTML = cards.map((c, idx) => {
+        const isCurrentActive = selectNewId ? c.id === selectNewId : idx === 0;
+        return renderFarmerGridItem(c, isBn, isCurrentActive);
+      }).join('');
+    }
+
+    // Update Stats counters
+    const totalFarmers = document.querySelector('#stats-total-farmers');
+    const totalAcreage = document.querySelector('#stats-total-acreage');
+    const activeCardsEl = document.querySelector('#stats-active-cards');
+    const sumAcreage = cards.reduce((acc, c) => {
+      const num = parseFloat(c.fieldSize);
+      return isNaN(num) ? acc : acc + num;
+    }, 0);
+
+    if (totalFarmers) totalFarmers.textContent = formatNumber(cards.length);
+    if (totalAcreage) totalAcreage.innerHTML = `${formatNumber(sumAcreage)} <small>${isBn ? 'হেক্টর' : 'Ha'}</small>`;
+    if (activeCardsEl) activeCardsEl.textContent = cards.length > 0 ? '100%' : '0%';
+    if (countBadge) countBadge.textContent = formatNumber(cards.length);
+
+    applyFilters();
+  }
+
+  // Form submission handling
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.querySelector('#farmer-name-input');
+      const cardNumInput = document.querySelector('#farmer-card-number-input');
+      const districtInput = document.querySelector('#farmer-district-input');
+      const upazilaInput = document.querySelector('#farmer-upazila-input');
+      const fieldSizeInput = document.querySelector('#farmer-field-size-input');
+      const cropSelect = document.querySelector('#farmer-crop-select');
+      const phoneInput = document.querySelector('#farmer-phone-input');
+      const nidInput = document.querySelector('#farmer-nid-input');
+      const catSelect = document.querySelector('#farmer-category-select');
+      const notesInput = document.querySelector('#farmer-notes-input');
+
+      const farmerName = nameInput ? nameInput.value.trim() : '';
+      const cardNumber = cardNumInput ? cardNumInput.value.trim() : '';
+      const district = districtInput ? districtInput.value.trim() : '';
+      const upazila = upazilaInput ? upazilaInput.value.trim() : '';
+      const fieldSize = fieldSizeInput ? fieldSizeInput.value.trim() : '';
+      const primaryCrop = cropSelect ? cropSelect.value : 'Tomatoes';
+      const phone = phoneInput ? phoneInput.value.trim() : '';
+      const nid = nidInput ? nidInput.value.trim() : '';
+      const category = catSelect ? catSelect.value : 'Commercial Grower';
+      const notes = notesInput ? notesInput.value.trim() : '';
+
+      if (!farmerName || !cardNumber || !district || !fieldSize || !primaryCrop) {
+        if (alertBox) {
+          alertBox.className = 'farmer-form-alert error';
+          alertBox.textContent = t('farmersCard.validationError');
+          alertBox.style.display = 'block';
+        }
+        return;
+      }
+
+      const newCard = addFarmerCard({
+        farmerName,
+        cardNumber,
+        district,
+        upazila,
+        fieldSize,
+        primaryCrop,
+        phone,
+        nid,
+        category,
+        notes
+      });
+
+      closeModal();
+      refreshCardsGrid(newCard.id);
+      updateFeaturedPreview(newCard);
+
+      // Smooth scroll to featured card
+      const showcase = document.querySelector('#featured-smart-card');
+      if (showcase) {
+        showcase.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  // Event delegation on Directory Grid for card selection and deletion
+  if (grid) {
+    grid.addEventListener('click', (e) => {
+      const selectBtn = e.target.closest('.btn-select-farmer-card');
+      if (selectBtn) {
+        const cardId = selectBtn.dataset.selectCardId;
+        const currentUser = getCurrentUser();
+        const cards = getFarmerCardsForUser(currentUser);
+        const found = cards.find(c => c.id === cardId);
+        if (found) {
+          updateFeaturedPreview(found);
+          const featured = document.querySelector('#featured-smart-card');
+          if (featured) featured.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+
+      const deleteBtn = e.target.closest('.btn-delete-farmer-card');
+      if (deleteBtn) {
+        const cardId = deleteBtn.dataset.deleteCardId;
+        const confirmed = window.confirm(t('farmersCard.confirmDelete'));
+        if (confirmed) {
+          deleteFarmerCard(cardId);
+          const currentUser = getCurrentUser();
+          const remaining = getFarmerCardsForUser(currentUser);
+          refreshCardsGrid();
+          if (remaining.length > 0) {
+            updateFeaturedPreview(remaining[0]);
+          }
+        }
+        return;
+      }
+
+      // If clicked anywhere on a card article
+      const article = e.target.closest('.farmer-grid-card');
+      if (article && !e.target.closest('button')) {
+        const cardId = article.dataset.farmerId;
+        const currentUser = getCurrentUser();
+        const cards = getFarmerCardsForUser(currentUser);
+        const found = cards.find(c => c.id === cardId);
+        if (found) {
+          updateFeaturedPreview(found);
+        }
+      }
+    });
+  }
+
+  // Search & Filter functionality
+  function applyFilters() {
+    const q = (searchInput ? searchInput.value.trim().toLowerCase() : '');
+    const dist = (districtFilter ? districtFilter.value.trim().toLowerCase() : '');
+    const crp = (cropFilter ? cropFilter.value.trim().toLowerCase() : '');
+
+    const currentUser = getCurrentUser();
+    const cards = getFarmerCardsForUser(currentUser);
+    let visibleCount = 0;
+
+    document.querySelectorAll('.farmer-grid-card').forEach(el => {
+      const cardId = el.dataset.farmerId;
+      const c = cards.find(item => item.id === cardId);
+      if (!c) {
+        el.style.display = 'none';
+        return;
+      }
+
+      const text = `${c.farmerName} ${c.cardNumber} ${c.district} ${c.upazila} ${c.primaryCrop} ${c.category} ${c.fieldSize}`.toLowerCase();
+      const matchesQ = !q || text.includes(q);
+      const matchesDist = !dist || (c.district || '').toLowerCase() === dist;
+      const matchesCrp = !crp || (c.primaryCrop || '').toLowerCase() === crp;
+
+      if (matchesQ && matchesDist && matchesCrp) {
+        el.style.display = '';
+        visibleCount++;
+      } else {
+        el.style.display = 'none';
+      }
+    });
+
+    if (countBadge) countBadge.textContent = formatNumber(visibleCount);
+    if (emptyState) {
+      if (cards.length === 0) {
+        emptyState.style.display = 'block';
+        const emptyTitle = emptyState.querySelector('.empty-title');
+        const emptyDesc = emptyState.querySelector('.empty-desc');
+        if (emptyTitle) emptyTitle.textContent = t('farmersCard.noCardsUser');
+        if (emptyDesc) emptyDesc.textContent = t('farmersCard.noCardsUserHint');
+      } else if (visibleCount === 0) {
+        emptyState.style.display = 'block';
+        const emptyTitle = emptyState.querySelector('.empty-title');
+        const emptyDesc = emptyState.querySelector('.empty-desc');
+        if (emptyTitle) emptyTitle.textContent = t('farmersCard.noResults');
+        if (emptyDesc) emptyDesc.textContent = t('farmersCard.noResultsHint');
+      } else {
+        emptyState.style.display = 'none';
+      }
+    }
+  }
+
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (districtFilter) districtFilter.addEventListener('change', applyFilters);
+  if (cropFilter) cropFilter.addEventListener('change', applyFilters);
+}
+
 function getKbIcon(name) {
   switch (name) {
     case 'rocket':
@@ -1942,11 +2962,14 @@ function chatWidget() {
 
 function loginPage() {
   const currentUser = getCurrentUser();
+  const redirectTarget = new URLSearchParams(window.location.search).get('redirect');
   if (currentUser) {
-    if (currentUser.role === 'admin') navigate('/admin');
+    if (redirectTarget) navigate(redirectTarget);
+    else if (currentUser.role === 'admin') navigate('/admin');
     else navigate('/dashboard');
     return '';
   }
+  const signupHref = redirectTarget ? `/signup?redirect=${encodeURIComponent(redirectTarget)}` : '/signup';
 
   return `
     <div class="auth-page auth-login-page">
@@ -2035,7 +3058,7 @@ function loginPage() {
               </div>
 
               <div class="auth-footer-links">
-                <a class="auth-signup-cta" href="/signup" data-route>${t('auth.signUp')}</a>
+                <a class="auth-signup-cta" href="${signupHref}" data-route>${t('auth.signUp')}</a>
                 <a class="auth-forgot-link" href="#forgot">${t('auth.forgotPassword')}</a>
               </div>
             </form>
@@ -2107,10 +3130,13 @@ function setupLoginEvents() {
 
 function signupPage() {
   const currentUser = getCurrentUser();
+  const redirectTarget = new URLSearchParams(window.location.search).get('redirect');
   if (currentUser) {
-    navigate('/dashboard');
+    if (redirectTarget) navigate(redirectTarget);
+    else navigate('/dashboard');
     return '';
   }
+  const loginHref = redirectTarget ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : '/login';
 
   return `
     <div class="auth-page auth-signup-page">
@@ -2162,7 +3188,7 @@ function signupPage() {
               <button class="auth-btn-primary" type="submit" id="signup-submit-btn">Create Account &amp; Access Dashboard</button>
 
               <div class="auth-bottom-row">
-                <span>Already have an account? <a class="auth-link-highlight" href="/login" data-route>Log In</a></span>
+                <span>Already have an account? <a class="auth-link-highlight" href="${loginHref}" data-route>Log In</a></span>
               </div>
             </form>
           </div>
@@ -2171,7 +3197,7 @@ function signupPage() {
           <div class="signup-showcase-container">
             <img class="signup-mockup-img" src="/assets/signup-platform-showcase.jpg" alt="PhytoGuard AI leaf-level drone crop protection platform" />
             <p class="auth-showcase-caption">
-              Monitor crops, detect pests, and optimize yields - all from <strong class="accent-blue">One Platform</strong>
+              Monitor crops, detect diseases, and optimize yields - all from <strong class="accent-blue">One Platform</strong>
             </p>
           </div>
         </div>
@@ -3158,7 +4184,7 @@ function setupDashboardHeatmapEvents() {
 function renderAdminUploadModal(targetUser) {
   const user = targetUser || {
     id: 'REQ-2026-081',
-    name: 'Ador Chowdhury',
+    name: 'Ador',
     company: 'Chowdhury Agrotech Farms',
     district: 'Bogura',
     email: 'ador@phytoguard.ai',
@@ -3286,6 +4312,49 @@ function renderAdminUploadModal(targetUser) {
   `;
 }
 
+/**
+ * Renders an actionable recommendation badge for a detected crop pathology in monitored sectors
+ */
+function renderSectorRecommendation(diseaseName, cropName = '', lang = getLang()) {
+  const rec = getDiseaseRecommendation(diseaseName, cropName, lang);
+  if (!rec) return '';
+  return `
+    <div class="field-recommendation ${rec.severity}">
+      <span class="rec-badge-pill">
+        <span class="rec-icon" aria-hidden="true">${rec.icon}</span>
+        <span>${rec.actionTag}</span>
+      </span>
+      <span class="rec-text">${rec.text}</span>
+    </div>
+  `;
+}
+
+/**
+ * Renders recommendation for user registered crop plot based on latest drone scan
+ */
+function renderUserSectorRecommendation(userReq, latestScan, hasCompletedScan) {
+  if (!hasCompletedScan || !latestScan) return '';
+  const pathology = latestScan.pathologyAlerts?.[0] || '';
+  const customRx = latestScan.prescriptionAction;
+  const rec = getDiseaseRecommendation(pathology, userReq?.cropSector || '', getLang());
+  if (!rec && (!customRx || customRx.toLowerCase().includes('pending'))) return '';
+
+  const severity = rec?.severity || 'warn';
+  const icon = rec?.icon || '💡';
+  const tag = rec?.actionTag || (getLang() === 'bn' ? 'এআই সুপারিশ' : 'AI Recommendation');
+  const text = (customRx && !customRx.toLowerCase().includes('pending')) ? customRx : (rec?.text || '');
+
+  return `
+    <div class="field-recommendation ${severity}">
+      <span class="rec-badge-pill">
+        <span class="rec-icon" aria-hidden="true">${icon}</span>
+        <span>${tag}</span>
+      </span>
+      <span class="rec-text">${text}</span>
+    </div>
+  `;
+}
+
 function dashboardPage() {
   const currentUser = getCurrentUser();
   if (!currentUser) {
@@ -3350,7 +4419,7 @@ function dashboardPage() {
             <span class="live-dot" aria-hidden="true"></span>
             <span>${t('dash.session')}</span>
           </div>
-          <h1 class="dash-greeting">${t('dash.welcome')} <span class="dash-user-highlight">${activeUser.name}</span> 👋</h1>
+          <h1 class="dash-greeting">${t('dash.welcome')} <span class="dash-user-highlight">${formatUserName(activeUser)}</span> 👋</h1>
           <p class="dash-subtitle">${t('dash.subtitle')}</p>
         </div>
         <div class="dash-actions">
@@ -3496,7 +4565,7 @@ function dashboardPage() {
               <h3 class="scan-notify-title">
                 ${isDemo 
                   ? t('dash.standbyTitle', 'Launch Autonomous Drone Aerial Scan') 
-                  : (getLang() === 'bn' ? `স্বাগতম, ${activeUser.firstName || activeUser.name}! আপনার প্রথম ড্রোন মিশন প্ল্যান করুন` : `Welcome to PhytoGuard AI, ${activeUser.firstName || activeUser.name}!`)}
+                  : (getLang() === 'bn' ? `স্বাগতম, ${formatUserName(activeUser)}! আপনার প্রথম ড্রোন মিশন প্ল্যান করুন` : `Welcome to PhytoGuard AI, ${formatUserName(activeUser)}!`)}
               </h3>
               <p class="scan-notify-sub">
                 <span>${isDemo 
@@ -3594,6 +4663,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill" style="width: 86%;"></div></div>
                   <span>86%</span>
                 </div>
+                ${renderSectorRecommendation('Yellow Rust', 'Wheat')}
               </div>
 
               <div class="dash-field-row">
@@ -3611,6 +4681,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill bg-amber" style="width: 78%;"></div></div>
                   <span>78%</span>
                 </div>
+                ${renderSectorRecommendation('Late Blight', 'Tomatoes')}
               </div>
 
               <div class="dash-field-row">
@@ -3627,6 +4698,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill" style="width: 95%;"></div></div>
                   <span>95%</span>
                 </div>
+                ${renderSectorRecommendation('Clean', 'Soybeans')}
               </div>
 
               <div class="dash-field-row">
@@ -3643,6 +4715,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill bg-amber" style="width: 81%;"></div></div>
                   <span>81%</span>
                 </div>
+                ${renderSectorRecommendation('Downy Mildew', 'Cucumbers')}
               </div>
 
               <div class="dash-field-row">
@@ -3659,6 +4732,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill" style="width: 84%;"></div></div>
                   <span>84%</span>
                 </div>
+                ${renderSectorRecommendation('Early Blight', 'Potatoes')}
               </div>
 
               <div class="dash-field-row">
@@ -3675,6 +4749,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill" style="width: 93%;"></div></div>
                   <span>93%</span>
                 </div>
+                ${renderSectorRecommendation('Healthy', 'Grapevines')}
               </div>
             ` : userReq ? `
               <div class="dash-field-row">
@@ -3692,6 +4767,7 @@ function dashboardPage() {
                   <div class="health-bar"><div class="health-fill ${hasCompletedScan ? 'bg-amber' : ''}" style="width: ${hasCompletedScan ? '78%' : '100%'};"></div></div>
                   <span>${hasCompletedScan ? '78%' : '100%'}</span>
                 </div>
+                ${renderUserSectorRecommendation(userReq, latestScan, hasCompletedScan)}
               </div>
             ` : `
               <div class="dash-empty-state-card">
@@ -4936,7 +6012,50 @@ async function handleLoginSubmit() {
     return;
   }
 
-  // 1. If Supabase is configured and input is an email, attempt Supabase Auth first
+  // 1. Instant check for primary demo accounts (ador@phytoguard.ai / password123 & admin@phytoguard.ai / admin)
+  const cleanPass = password.trim();
+  const isDemoGrower =
+    (usernameOrEmail === 'ador@phytoguard.ai' || usernameOrEmail === 'ador') &&
+    (password === 'password123' || cleanPass === 'password123');
+
+  const isDemoAdmin =
+    (usernameOrEmail === 'admin@phytoguard.ai' || usernameOrEmail === 'admin') &&
+    (password === 'admin' || cleanPass === 'admin');
+
+  if (isDemoGrower) {
+    const growerUser = {
+      name: 'Ador',
+      firstName: 'Ador',
+      lastName: '',
+      email: 'ador@phytoguard.ai',
+      phone: '+880 1700-000000',
+      password: 'password123',
+      role: 'grower',
+      isDemo: true
+    };
+    setCurrentUser(growerUser);
+    const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+    navigate(redirectTarget);
+    return;
+  }
+
+  if (isDemoAdmin) {
+    const adminUser = {
+      name: 'System Administrator',
+      firstName: 'Admin',
+      lastName: 'Command',
+      email: 'admin@phytoguard.ai',
+      phone: '+880 1700-ADMIN',
+      password: 'admin',
+      role: 'admin'
+    };
+    setCurrentUser(adminUser);
+    const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+    navigate(redirectTarget);
+    return;
+  }
+
+  // 2. If Supabase is configured and input is an email, attempt Supabase Auth next
   if (isSupabaseConfigured && usernameOrEmail.includes('@')) {
     if (submitBtn) submitBtn.disabled = true;
     try {
@@ -4944,11 +6063,22 @@ async function handleLoginSubmit() {
       if (data && data.user) {
         const supaUser = data.user;
         const meta = supaUser.user_metadata || {};
-        const firstName = meta.firstName || meta.first_name || (supaUser.email.split('@')[0]);
-        const lastName = meta.lastName || meta.last_name || '';
+        let firstName = meta.firstName || meta.first_name || (supaUser.email.split('@')[0]);
+        let lastName = meta.lastName || meta.last_name || '';
+        let fullName = `${firstName} ${lastName}`.trim() || supaUser.email;
+        if (
+          (supaUser.email || '').toLowerCase().trim() === 'ador@phytoguard.ai' ||
+          fullName.toLowerCase() === 'ador chowdhury' ||
+          fullName.toLowerCase().includes('ador chowdhury') ||
+          (firstName.toLowerCase() === 'ador' && (lastName.toLowerCase() === 'chowdhury' || !lastName))
+        ) {
+          firstName = 'Ador';
+          lastName = '';
+          fullName = 'Ador';
+        }
         const role = meta.role || (supaUser.email.toLowerCase().includes('admin') ? 'admin' : 'grower');
         const userObj = {
-          name: `${firstName} ${lastName}`.trim() || supaUser.email,
+          name: fullName,
           firstName,
           lastName,
           email: supaUser.email,
@@ -4957,7 +6087,8 @@ async function handleLoginSubmit() {
           createdAt: supaUser.created_at
         };
         setCurrentUser(userObj);
-        navigate('/dashboard');
+        const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+        navigate(redirectTarget);
         return;
       }
     } catch (supaErr) {
@@ -4976,12 +6107,12 @@ async function handleLoginSubmit() {
     }
   }
 
-  // 2. Fallback check for seeded and local demo accounts (e.g. admin@phytoguard.ai)
+  // 3. Fallback check for seeded and local demo accounts
   const users = getStoredUsers();
   const matchedUser = users.find((u) => {
-    const email = (u.email || '').toLowerCase();
-    const firstName = (u.firstName || '').toLowerCase();
-    const fullName = (u.name || '').toLowerCase();
+    const email = (u.email || '').toLowerCase().trim();
+    const firstName = (u.firstName || '').toLowerCase().trim();
+    const fullName = (u.name || '').toLowerCase().trim();
     const userPrefix = email.split('@')[0];
     return (
       email === usernameOrEmail ||
@@ -4991,14 +6122,15 @@ async function handleLoginSubmit() {
     );
   });
 
-  if (!matchedUser || matchedUser.password !== password) {
+  if (!matchedUser || (matchedUser.password !== password && matchedUser.password !== cleanPass)) {
     showAuthAlert(alertBox, 'Invalid email or password. Please check your credentials and try again.', 'error');
     return;
   }
 
-  // Set session and redirect to dashboard
+  // Set session and redirect to dashboard or requested page
   setCurrentUser(matchedUser);
-  navigate('/dashboard');
+  const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+  navigate(redirectTarget);
 }
 
 async function handleSignupSubmit() {
@@ -5075,7 +6207,8 @@ async function handleSignupSubmit() {
         }
 
         setCurrentUser(newUser);
-        navigate('/dashboard');
+        const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+        navigate(redirectTarget);
         return;
       }
     } catch (supaErr) {
@@ -5107,9 +6240,10 @@ async function handleSignupSubmit() {
     localStorage.setItem('phyto_users', JSON.stringify(users));
   } catch (e) {}
 
-  // Automatically log in and redirect to dashboard
+  // Automatically log in and redirect to dashboard or requested page
   setCurrentUser(newUser);
-  navigate('/dashboard');
+  const redirectTarget = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+  navigate(redirectTarget);
 }
 
 function render() {
@@ -5119,7 +6253,7 @@ function render() {
 
   // If System Administrator is logged in:
   // Admin view is strictly the Admin Dashboard (users demo requests & drone upload)
-  if (isAdmin && path !== '/dashboard' && path !== '/admin') {
+  if (isAdmin && path !== '/dashboard' && path !== '/admin' && path !== '/farmers-card') {
     window.history.replaceState({}, '', '/dashboard');
     navigate('/dashboard');
     return;
@@ -5134,6 +6268,13 @@ function render() {
   else if (crop) page = cropDetailPage(crop);
   else if (path === '/how-it-works') page = howItWorksPage();
   else if (path === '/plans') page = plansPage();
+  else if (path === '/farmers-card') {
+    if (!currentUser) {
+      navigate('/login?redirect=/farmers-card');
+      return;
+    }
+    page = farmersCardPage();
+  }
   else if (path === '/knowledge-base' || path === '/about') page = knowledgeBasePage();
   else if (path === '/dashboard') page = isAdmin ? adminDashboardPage() : dashboardPage();
   else if (path === '/login') page = loginPage();
@@ -5160,6 +6301,8 @@ function render() {
 
   if (path === '/') {
     setupLandingHeroVideoEvents();
+  } else if (path === '/farmers-card') {
+    setupFarmersCardEvents();
   } else if (path === '/knowledge-base' || path === '/about') {
     setupKnowledgeBaseEvents();
   } else if (path === '/dashboard') {
@@ -5184,6 +6327,7 @@ function render() {
   else if (path === '/crops') document.title = 'PhytoGuard AI - Main Crops';
   else if (path === '/how-it-works') document.title = 'PhytoGuard AI - How It Works';
   else if (path === '/plans') document.title = 'PhytoGuard AI - Plans & Pricing';
+  else if (path === '/farmers-card') document.title = getLang() === 'bn' ? 'ফাইটোগার্ড এআই - কৃষক স্মার্ট কার্ড ও খতিয়ান' : 'PhytoGuard AI - Farmers Card & Field Registry';
   else if (path === '/knowledge-base' || path === '/about') document.title = getLang() === 'bn' ? 'ফাইটোগার্ড এআই - বাংলাদেশ কৃষি তথ্যভান্ডার' : 'PhytoGuard AI - Bangladesh Agricultural Knowledge Base';
   else if (crop) document.title = `PhytoGuard AI - ${crop.name} Monitoring`;
   else document.title = 'PhytoGuard AI - AI crop monitoring';

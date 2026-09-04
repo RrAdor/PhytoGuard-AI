@@ -2,7 +2,8 @@ import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
-const artifactsDir = '/home/ador/.gemini/antigravity/brain/f7739f2a-b6cc-40fd-9e5c-643d19c29274';
+const artifactsDir = process.env.ARTIFACTS_DIR || '/home/ador/.gemini/antigravity/brain/6bddb615-a7e7-4bcc-9e2f-98866e4091ab';
+if (!fs.existsSync(artifactsDir)) fs.mkdirSync(artifactsDir, { recursive: true });
 const distDir = path.resolve(process.cwd(), 'dist');
 const publicDir = path.resolve(process.cwd(), 'public');
 

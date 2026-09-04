@@ -169,11 +169,11 @@ export const kbCategories = [
       },
       {
         slug: 'pests-diseases-mission',
-        title: 'How to do "Pests and Diseases" Mission in BD?',
+        title: 'How to do "Crop Disease Scouting" Mission in BD?',
         title_bn: 'বাংলাদেশে রোগবালাই শনাক্তকরণ ড্রোন মিশন কীভাবে করবেন?',
         excerpt: 'Configure foliar inspection grids scheduled between 10:30 AM and 2:30 PM after winter morning fog lifts.',
         excerpt_bn: 'শীতের সকালে কুয়াশা কাটার পর সকাল ১০:৩০ থেকে দুপুর ২:৩০-এর মধ্যে রোগবালাই স্ক্যান ফ্লাইট পরিচালনা।',
-        content: `<h3>Executing Pest &amp; Pathogen Scouting Missions in BD</h3>
+        content: `<h3>Executing Foliar Disease &amp; Pathogen Scouting Missions in BD</h3>
 <p>Foliar disease missions capture ultra-high-resolution multispectral imagery over high-density crop canopies:</p>
 <h4>Bangladesh Flight Best Practices:</h4>
 <ul>

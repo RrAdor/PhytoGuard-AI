@@ -81,11 +81,11 @@ async function run() {
   }
   console.log('✓ Admin User Switcher Bar is active.');
 
-  // Verify Single-Line Welcome for Ador Chowdhury (default)
+  // Verify Single-Line Welcome for Ador (default)
   const greeting = await page.$eval('.dash-greeting', el => el.textContent.trim());
   console.log(`Active User Greeting: "${greeting}"`);
-  if (!greeting.includes('Ador Chowdhury')) {
-    throw new Error('FAILED: Default active user greeting is not Ador Chowdhury!');
+  if (!greeting.includes('Ador')) {
+    throw new Error('FAILED: Default active user greeting is not Ador!');
   }
 
   const greetingHeight = await page.$eval('.dash-greeting', el => el.getBoundingClientRect().height);

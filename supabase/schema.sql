@@ -142,7 +142,7 @@ create policy "Allow all write monitored_crops" on public.monitored_crops for al
 -- ------------------------------------------------------------------------------
 insert into public.demo_requests (request_id, user_name, user_email, user_phone, company, district, acreage, crop, status, dataset_count, sensor_model, gsd, altitude, notes)
 values
-  ('REQ-2026-081', 'Ador Chowdhury', 'ador@phytoguard.ai', '+880 1711-445566', 'Chowdhury Agro-Tech Ltd', 'Dinajpur', 280, 'Wheat', 'Approved', 1, 'DJI Matrice 350 RTK / MicaSense RedEdge-P', '0.65 cm/px', '60 m AGL', 'Early rust signs detected in quadrant B-4'),
+  ('REQ-2026-081', 'Ador', 'ador@phytoguard.ai', '+880 1711-445566', 'Chowdhury Agro-Tech Ltd', 'Dinajpur', 280, 'Wheat', 'Approved', 1, 'DJI Matrice 350 RTK / MicaSense RedEdge-P', '0.65 cm/px', '60 m AGL', 'Early rust signs detected in quadrant B-4'),
   ('REQ-2026-082', 'Rafiqul Islam', 'rafiqul@dinajpur-farms.bd', '+880 1722-556677', 'North Bengal Seed Co.', 'Rangpur', 195, 'Tomatoes', 'Imagery Uploaded', 1, 'DJI Mavic 3 Multispectral (M3M)', '0.82 cm/px', '65 m AGL', 'Late Blight suspicion on leaf undersides'),
   ('REQ-2026-083', 'Tariqul Hasan', 'tariqul@bogra-green.com', '+880 1733-667788', 'Bogra Agronomics Enterprise', 'Bogra', 340, 'Soybeans', 'Approved', 1, 'Resonon Pika Hyperspectral Sensor', '0.45 cm/px', '50 m AGL', 'Canopy vigor index dropping in Sector 3'),
   ('REQ-2026-084', 'Nazrul Ahmed', 'nazrul@rajshahi-orchards.net', '+880 1744-778899', 'Padma Delta Growers', 'Rajshahi', 410, 'Cucumbers', 'Pending Review', 0, 'DJI Matrice 350 RTK', '0.70 cm/px', '70 m AGL', 'Requesting multi-band flight grid for powdery mildew check')

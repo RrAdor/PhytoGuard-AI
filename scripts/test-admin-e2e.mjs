@@ -146,11 +146,11 @@ async function runTest() {
   await page.waitForSelector('#admin-viewer-modal', { state: 'hidden' });
 
   console.log('--- Step 6: Testing User Dashboard with Attached Imagery ---');
-  // Log in as Ador Chowdhury who has an uploaded imagery request in Bogura
+  // Log in as Ador who has an uploaded imagery request in Bogura
   await page.evaluate(() => {
     localStorage.setItem('phyto_current_user', JSON.stringify({
       id: 'usr-1',
-      name: 'Ador Chowdhury',
+      name: 'Ador',
       email: 'ador@phytoguard.ai',
       company: 'North Bengal Seed & Agro',
       role: 'Enterprise Grower'
